@@ -31,4 +31,11 @@ const transactionSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
+// Indexes for better query performance
+transactionSchema.index({ date: -1 });
+transactionSchema.index({ category: 1 });
+transactionSchema.index({ type: 1 });
+transactionSchema.index({ recordedBy: 1 });
+transactionSchema.index({ date: -1, category: 1, type: 1 });
+
 module.exports = mongoose.model("Transaction", transactionSchema);
