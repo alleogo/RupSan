@@ -2,7 +2,7 @@
 
 A comprehensive MERN stack application designed for managing Yatras (spiritual journeys/tours), tracking expenses, handling participant registrations, and providing role-based access for Admins, Managers, and Participants.
 
-## 🌟 Features
+## Features
 
 - **Role-Based Access Control (RBAC):**
   - **Admin:** Full access to manage all Yatras, approve/reject Manager accounts, verify Participants, and oversee global finances.
@@ -14,7 +14,7 @@ A comprehensive MERN stack application designed for managing Yatras (spiritual j
 - **Media Uploads:** Integrated with Cloudinary for handling image uploads (thumbnails, gallery, QR codes, etc.).
 - **Secure Authentication:** JWT-based authentication with OTP email verification during registration.
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 - **Frontend:** React.js, React Router DOM, Axios
 - **Backend:** Node.js, Express.js
@@ -23,7 +23,7 @@ A comprehensive MERN stack application designed for managing Yatras (spiritual j
 - **File Uploads:** express-fileupload, Cloudinary
 - **Emails:** Nodemailer
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -90,10 +90,10 @@ npm start
 ```
 *(App runs on http://localhost:3000 by default)*
 
-## 🔐 Admin Registration
+## Admin Registration
 
 To register an **Admin** account, select the Admin role on the signup page and provide the `ADMIN_SECRET` that matches the value in your backend `.env` file. This prevents unauthorized users from creating Admin accounts.
 
-## 📄 License
+## License
 
 This project is licensed under the ISC License.
