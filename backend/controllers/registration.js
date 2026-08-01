@@ -3,9 +3,12 @@ const Yatra = require("../models/Yatra");
 const User = require("../models/User");
 const uploadImageToCloudinary = require("../utils/cloudinaryUploader");
 
+// Registration Controller - Manages Yatra registration and participant approval
+
 exports.registerForYatra = async (req, res) => {
     try {
         const { yatraId, paymentRefId } = req.body;
+        console.log(`[registerForYatra] User ${req.user.id} attempting to register for Yatra: ${yatraId}`);
 
         if (!yatraId) {
             return res.status(400).json({ success: false, message: "Yatra ID is required" });
@@ -59,6 +62,7 @@ exports.updateRegistrationDetails = async (req, res) => {
     try {
         const { registrationId } = req.params;
         const { amountToBePaid, paidOnline, paidCash, firstName, lastName } = req.body;
+        console.log(`[updateRegistrationDetails] Updating registration: ${registrationId}, Amount: ${amountToBePaid}`);
 
         const registration = await YatraRegistration.findByIdAndUpdate(
             registrationId, 
@@ -94,6 +98,7 @@ exports.getYatraRegistrations = async (req, res) => {
     try {
         const { yatraId } = req.params;
         const { status } = req.query; // 'Pending' or 'Approved'
+        console.log(`[getYatraRegistrations] Fetching registrations for Yatra: ${yatraId}, Status filter: ${status || 'All'}`);
         
         let query = { yatra: yatraId };
         if (status) {
@@ -133,6 +138,7 @@ exports.approveRegistration = async (req, res) => {
     try {
         const { registrationId } = req.params;
         const { action } = req.body; // 'Approve' or 'Reject'
+        console.log(`[approveRegistration] Manager action: ${action} for registration: ${registrationId}`);
 
         const registration = await YatraRegistration.findById(registrationId).populate("user").populate("yatra");
         if (!registration) {
