@@ -5,10 +5,14 @@ const jwt = require("jsonwebtoken");
 const mailSender = require("../utils/mailSender");
 require("dotenv").config();
 
+// Auth Controller - Handles user authentication and registration
+
 // Send OTP
 exports.sendOTP = async (req, res) => {
     try {
         const { email } = req.body;
+        console.log(`[sendOTP] Received request for email: ${email}`);
+        
         if (!email) {
             return res.status(400).json({ success: false, message: "Email is required" });
         }
@@ -41,6 +45,7 @@ exports.sendOTP = async (req, res) => {
 exports.register = async (req, res) => {
     try {
         const { firstName, lastName, email, password, role, adminSecret, otp } = req.body;
+        console.log(`[register] New registration attempt for: ${email} (Role: ${role})`);
 
         if (!firstName || !lastName || !email || !password || !role || !otp) {
             return res.status(400).json({ success: false, message: "All fields including OTP are required" });
