@@ -2,9 +2,12 @@ const Expense = require("../models/Expense");
 const YatraRegistration = require("../models/YatraRegistration");
 const Ticket = require("../models/Ticket");
 
+// Expense Controller - Handles expense tracking and splitting
+
 exports.addExpense = async (req, res) => {
     try {
         const { yatraId, name, amount, splitAmong, description } = req.body;
+        console.log(`[addExpense] New expense added to Yatra: ${yatraId}, Amount: ${amount}, Paid by: ${req.user.id}`);
 
         if (!yatraId || !name || amount === undefined) {
             return res.status(400).json({ success: false, message: "Required fields are missing" });
@@ -40,6 +43,8 @@ exports.addExpense = async (req, res) => {
 exports.getYatraExpenses = async (req, res) => {
     try {
         const { yatraId } = req.params;
+        console.log(`[getYatraExpenses] Fetching expenses for Yatra: ${yatraId}`);
+        
         const expenses = await Expense.find({ yatra: yatraId })
             .populate("paidBy", "firstName lastName")
             .populate("splitAmong", "firstName lastName");
