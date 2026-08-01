@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 
+// User Model - Stores user account information and credentials
+
 const userSchema = new mongoose.Schema({
     firstName: {
         type: String,
@@ -65,5 +67,15 @@ const userSchema = new mongoose.Schema({
         default: null
     }
 }, { timestamps: true });
+
+// Post-save hook to log user creation/update
+userSchema.post('save', function(doc) {
+    console.log(`[User Model] User saved: ${doc.email} (Role: ${doc.role}, Verification: ${doc.verificationStatus})`);
+});
+
+// Pre-update hook to log updates
+userSchema.pre('findByIdAndUpdate', function() {
+    console.log(`[User Model] Updating user with ID: ${this.getFilter()._id}`);
+});
 
 module.exports = mongoose.model("User", userSchema);

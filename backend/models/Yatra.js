@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 
+// Yatra Model - Stores pilgrimage/trip information
+
 const yatraSchema = new mongoose.Schema({
     title: {
         type: String,
@@ -57,6 +59,16 @@ const yatraSchema = new mongoose.Schema({
         default: null
     }
 }, { timestamps: true });
+
+// Post-save hook to log yatra creation/update
+yatraSchema.post('save', function(doc) {
+    console.log(`[Yatra Model] Yatra saved: ${doc.title} (Status: ${doc.status}, Fee: ₹${doc.registrationFee})`);
+});
+
+// Pre-update hook to log updates
+yatraSchema.pre('findByIdAndUpdate', function() {
+    console.log(`[Yatra Model] Updating yatra with ID: ${this.getFilter()._id}`);
+});
 
 module.exports = mongoose.model("Yatra", yatraSchema);
 
