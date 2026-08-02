@@ -3,6 +3,7 @@ require("dotenv").config();
 
 const mailSender = async (email, title, body) => {
     try {
+        console.log(`[Mail Sender] Attempting to send email to ${email} with subject "${title}"`);
         let transporter = nodemailer.createTransport({
             host: process.env.MAIL_HOST || "smtp.gmail.com",
             auth: {
@@ -17,6 +18,7 @@ const mailSender = async (email, title, body) => {
             subject: `${title}`,
             html: `${body}`,
         });
+        console.log(`[Mail Sender] Email successfully sent to ${email}. Message ID: ${info.messageId}`);
         console.log("Email Sent Info: ", info.response);
         return info;
     } catch (error) {
