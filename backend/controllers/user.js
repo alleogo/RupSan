@@ -3,11 +3,26 @@ const User = require("../models/User");
 // Update Profile
 exports.updateProfile = async (req, res) => {
     try {
-        const { aadharNumber, phoneNumber, centre } = req.body;
+        const { firstName, lastName, email, aadharNumber, phoneNumber, centre } = req.body;
         
+        if (email) {
+            const existingUser = await User.findOne({ email, _id: { $ne: req.user.id } });
+            if (existingUser) {
+                return res.status(400).json({ success: false, message: "Email is already in use by another account" });
+            }
+        }
+
+        const updates = {};
+        if (firstName !== undefined) updates.firstName = firstName;
+        if (lastName !== undefined) updates.lastName = lastName;
+        if (email !== undefined) updates.email = email;
+        if (aadharNumber !== undefined) updates.aadharNumber = aadharNumber;
+        if (phoneNumber !== undefined) updates.phoneNumber = phoneNumber;
+        if (centre !== undefined) updates.centre = centre;
+
         const user = await User.findByIdAndUpdate(
             req.user.id,
-            { aadharNumber, phoneNumber, centre },
+            updates,
             { new: true }
         );
 

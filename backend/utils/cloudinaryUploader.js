@@ -28,5 +28,6 @@ const uploadImageToCloudinary = async (file, folder, height, quality) => {
     } catch (error) {
         console.error(`[Cloudinary Uploader] Upload failed for folder ${folder}: ${error.message}`);
         throw error;
-}
+    }
+};
 module.exports = uploadImageToCloudinary;

@@ -7,8 +7,11 @@ import api, { settingsApi, getMediaUrl } from '../utils/api';
 import ImageCropper from '../components/ImageCropper';
 
 const Profile = () => {
-  const { user } = useContext(AuthContext);
+  const { user, setUser } = useContext(AuthContext);
   const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
     aadharNumber: '',
     phoneNumber: '',
     centre: ''
@@ -27,6 +30,9 @@ const Profile = () => {
   useEffect(() => {
     if (user) {
       setFormData({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
         aadharNumber: user.aadharNumber || '',
         phoneNumber: user.phoneNumber || '',
         centre: user.centre || ''
@@ -113,7 +119,10 @@ const Profile = () => {
       const res = await api.put('/user/profile', formData);
       if (res.data.success) {
         setMsg({ text: 'Profile updated successfully!', type: 'success' });
-        // Optionally update the context here, but we might need page refresh for now
+        // Update user context and localStorage
+        const updatedUser = res.data.user;
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
       }
     } catch (error) {
       setMsg({ text: error.response?.data?.message || 'Failed to update profile', type: 'error' });
@@ -144,8 +153,6 @@ const Profile = () => {
       <Card>
         <div style={{ marginBottom: '20px' }}>
           <h3>Personal Information</h3>
-          <p><strong>Name:</strong> {user.firstName} {user.lastName}</p>
-          <p><strong>Email:</strong> {user.email}</p>
           <p><strong>Role:</strong> {user.role}</p>
           
           {user.role === 'Participant' && (
@@ -175,6 +182,15 @@ const Profile = () => {
         )}
 
         <form onSubmit={handleUpdate}>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <div style={{ flex: 1 }}>
+              <Input label="First Name" name="firstName" value={formData.firstName} onChange={handleChange} placeholder="First Name" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <Input label="Last Name" name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Last Name" />
+            </div>
+          </div>
+          <Input label="Email Address" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="email@example.com" />
           <Input label="Aadhar Number" name="aadharNumber" value={formData.aadharNumber} onChange={handleChange} placeholder="1234 5678 9012" />
           <Input label="Phone Number" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} placeholder="+91 9876543210" />
           <Input label="Centre" name="centre" value={formData.centre} onChange={handleChange} placeholder="Centre" />

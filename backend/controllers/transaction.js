@@ -39,7 +39,7 @@ exports.getTransactions = async (req, res) => {
     try {
         const { startDate, endDate, category, type, page = 1, limit = 20 } = req.query;
         
-        let filter = {};
+        let filter = { recordedBy: req.user.id };
 
         // Date range filtering
         if (startDate || endDate) {
@@ -95,7 +95,7 @@ exports.getLedgerSummary = async (req, res) => {
     try {
         const { startDate, endDate, category } = req.query;
         
-        let filter = {};
+        let filter = { recordedBy: req.user.id };
 
         if (startDate || endDate) {
             filter.date = {};
@@ -193,7 +193,8 @@ exports.deleteTransaction = async (req, res) => {
 
 exports.getCategories = async (req, res) => {
     try {
-        const categories = await Transaction.distinct("category");
+        let filter = { recordedBy: req.user.id };
+        const categories = await Transaction.distinct("category", filter);
         
         return res.status(200).json({
             success: true,

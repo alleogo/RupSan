@@ -81,6 +81,12 @@ const YatraManagement = () => {
     const statusColor = yatra.status === 'Ongoing' ? 'var(--accent-success)' : 'var(--accent-primary)';
     const statusBg = yatra.status === 'Ongoing' ? 'rgba(16,185,129,0.15)' : 'rgba(99,102,241,0.15)';
 
+    const userId = user?._id || user?.id;
+    const isOwner = (yatra?.createdBy?._id || yatra?.createdBy)?.toString() === userId?.toString();
+    let buttonText = 'View Yatra';
+    if (user?.role === 'Admin' || (user?.role === 'Manager' && isOwner)) buttonText = 'Manage Details';
+    else if (user?.role === 'Manager') buttonText = 'Open details';
+
     return (
       <Card style={{ padding: 0, overflow: 'hidden' }}>
         {yatra.thumbnail ? (
@@ -109,7 +115,7 @@ const YatraManagement = () => {
           )}
           <div style={{ marginTop: '14px' }}>
             <Link to={`/yatra/${yatra._id}`} style={{ textDecoration: 'none' }}>
-              <Button variant="primary">Manage Details</Button>
+              <Button variant="primary">{buttonText}</Button>
             </Link>
           </div>
         </div>

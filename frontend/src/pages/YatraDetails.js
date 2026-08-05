@@ -336,7 +336,7 @@ const YatraDetails = () => {
 
   const isManagerOrAdmin = user?.role === 'Admin' || user?.role === 'Manager';
   const userId = user?._id || user?.id;
-  const isYatraOwner = user?.role === 'Admin' || (user?.role === 'Manager' && yatra?.createdBy?._id?.toString() === userId?.toString());
+  const isYatraOwner = (yatra?.createdBy?._id || yatra?.createdBy)?.toString() === userId?.toString();
 
   return (
     <>
