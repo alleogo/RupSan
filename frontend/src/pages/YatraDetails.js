@@ -454,7 +454,7 @@ const YatraDetails = () => {
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                   <h2>Expenses</h2>
-                  {isManagerOrAdmin && <Button style={{ width: 'auto' }} onClick={() => setExpenseModalOpen(true)}>+ Add Expense</Button>}
+                  {(isYatraOwner || user?.role === 'Admin') && <Button style={{ width: 'auto' }} onClick={() => setExpenseModalOpen(true)}>+ Add Expense</Button>}
                 </div>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                   <thead>
@@ -472,8 +472,12 @@ const YatraDetails = () => {
                         <td style={{ padding: '12px' }}>{exp.description}</td>
                         <td style={{ padding: '12px', fontWeight: 'bold' }}>₹{exp.amount}</td>
                         <td style={{ padding: '12px' }}>
-                            <Button variant="default" style={{ padding: '4px 8px', fontSize: '0.8rem', marginRight: '8px' }} onClick={() => { setEditExpenseData(exp); setEditExpenseModalOpen(true); }}>Edit</Button>
-                            <Button variant="danger" style={{ padding: '4px 8px', fontSize: '0.8rem' }} onClick={() => handleDeleteExpense(exp._id)}>Delete</Button>
+                          {(isYatraOwner || user?.role === 'Admin') && (
+                            <>
+                              <Button variant="default" style={{ padding: '4px 8px', fontSize: '0.8rem', marginRight: '8px' }} onClick={() => { setEditExpenseData(exp); setEditExpenseModalOpen(true); }}>Edit</Button>
+                              <Button variant="danger" style={{ padding: '4px 8px', fontSize: '0.8rem' }} onClick={() => handleDeleteExpense(exp._id)}>Delete</Button>
+                            </>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -486,7 +490,7 @@ const YatraDetails = () => {
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                   <h2>Tickets</h2>
-                  {isManagerOrAdmin && <Button style={{ width: 'auto' }} onClick={() => setTicketModalOpen(true)}>+ Add Ticket</Button>}
+                  {(isYatraOwner || user?.role === 'Admin') && <Button style={{ width: 'auto' }} onClick={() => setTicketModalOpen(true)}>+ Add Ticket</Button>}
                 </div>
                 
                 {tickets.length > 0 ? (
@@ -511,8 +515,12 @@ const YatraDetails = () => {
                             {ticket.ticketCancellationFile && <a href={getMediaUrl(ticket.ticketCancellationFile)} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-warning)' }}>Cancel File 📎</a>}
                           </td>
                           <td style={{ padding: '12px' }}>
-                            <Button variant="default" style={{ padding: '4px 8px', fontSize: '0.8rem', marginRight: '8px' }} onClick={() => { setEditTicketData(ticket); setEditTicketModalOpen(true); }}>Edit</Button>
-                            <Button variant="danger" style={{ padding: '4px 8px', fontSize: '0.8rem' }} onClick={() => handleDeleteTicket(ticket._id)}>Delete</Button>
+                            {(isYatraOwner || user?.role === 'Admin') && (
+                              <>
+                                <Button variant="default" style={{ padding: '4px 8px', fontSize: '0.8rem', marginRight: '8px' }} onClick={() => { setEditTicketData(ticket); setEditTicketModalOpen(true); }}>Edit</Button>
+                                <Button variant="danger" style={{ padding: '4px 8px', fontSize: '0.8rem' }} onClick={() => handleDeleteTicket(ticket._id)}>Delete</Button>
+                              </>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -551,7 +559,9 @@ const YatraDetails = () => {
                         <td style={{ padding: '12px', color: 'var(--accent-success)' }}>₹{reg.paidCash || 0}</td>
                         <td style={{ padding: '12px', color: left > 0 ? 'var(--accent-danger)' : 'var(--accent-success)' }}>₹{left}</td>
                         <td style={{ padding: '12px' }}>
-                          <Button variant="default" style={{ padding: '4px 8px', fontSize: '0.8rem' }} onClick={() => { setEditRegData(reg); setRegEditModalOpen(true); }}>Edit Details</Button>
+                          {(isYatraOwner || user?.role === 'Admin') && (
+                            <Button variant="default" style={{ padding: '4px 8px', fontSize: '0.8rem' }} onClick={() => { setEditRegData(reg); setRegEditModalOpen(true); }}>Edit Details</Button>
+                          )}
                         </td>
                       </tr>
                     )})}
@@ -577,10 +587,12 @@ const YatraDetails = () => {
                             </a>
                           </div>
                         )}
-                        <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                          <Button variant="primary" onClick={() => handleApproveReg(reg)} style={{ flex: 1 }}>Approve</Button>
-                          <Button variant="danger" onClick={() => handleRejectReg(reg)} style={{ flex: 1 }}>Reject</Button>
-                        </div>
+                        {(isYatraOwner || user?.role === 'Admin') && (
+                          <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                            <Button variant="primary" onClick={() => handleApproveReg(reg)} style={{ flex: 1 }}>Approve</Button>
+                            <Button variant="danger" onClick={() => handleRejectReg(reg)} style={{ flex: 1 }}>Reject</Button>
+                          </div>
+                        )}
                       </Card>
                     ))}
                   </div>
