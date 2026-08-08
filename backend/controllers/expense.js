@@ -6,27 +6,17 @@ const Ticket = require("../models/Ticket");
 
 exports.addExpense = async (req, res) => {
     try {
-        const { yatraId, name, amount, splitAmong, description } = req.body;
-        console.log(`[addExpense] New expense added to Yatra: ${yatraId}, Amount: ${amount}, Paid by: ${req.user.id}`);
+        const { yatraId, name, amount, description } = req.body;
+        console.log(`[addExpense] New expense added to Yatra: ${yatraId}, Amount: ${amount}`);
 
         if (!yatraId || !name || amount === undefined) {
             return res.status(400).json({ success: false, message: "Required fields are missing" });
-        }
-
-        let usersToSplit = splitAmong;
-
-        // If splitAmong is not provided, split among all registered participants
-        if (!usersToSplit || usersToSplit.length === 0) {
-            const registrations = await YatraRegistration.find({ yatra: yatraId, status: "Approved" });
-            usersToSplit = registrations.map(reg => reg.user);
         }
 
         const expense = await Expense.create({
             yatra: yatraId,
             name,
             amount,
-            paidBy: req.user.id,
-            splitAmong: usersToSplit,
             description
         });
 
@@ -45,9 +35,7 @@ exports.getYatraExpenses = async (req, res) => {
         const { yatraId } = req.params;
         console.log(`[getYatraExpenses] Fetching expenses for Yatra: ${yatraId}`);
         
-        const expenses = await Expense.find({ yatra: yatraId })
-            .populate("paidBy", "firstName lastName")
-            .populate("splitAmong", "firstName lastName");
+        const expenses = await Expense.find({ yatra: yatraId });
         
         return res.status(200).json({
             success: true,

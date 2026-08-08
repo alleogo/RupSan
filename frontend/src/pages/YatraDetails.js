@@ -306,7 +306,7 @@ const YatraDetails = () => {
       formData.append('startDate', editYatraData.startDate);
       formData.append('endDate', editYatraData.endDate);
       formData.append('registrationFee', editYatraData.registrationFee);
-      if (editYatraData.bankDetails) formData.append('bankDetails', editYatraData.bankDetails);
+
       if (editYatraData.upiId !== undefined) formData.append('upiId', editYatraData.upiId);
       if (editYatraData.newThumbnail) formData.append('thumbnail', editYatraData.newThumbnail);
       if (editYatraData.newQrCode) formData.append('qrCode', editYatraData.newQrCode);
@@ -413,7 +413,7 @@ const YatraDetails = () => {
                 startDate: yatra.startDate?.slice(0, 10),
                 endDate: yatra.endDate?.slice(0, 10),
                 registrationFee: yatra.registrationFee,
-                bankDetails: yatra.bankDetails || '',
+
                 upiId: yatra.upiId || ''
               });
               setEditYatraModalOpen(true);
@@ -431,13 +431,7 @@ const YatraDetails = () => {
         </div>
       )}
       
-      {yatra.gallery && yatra.gallery.length > 0 && (
-        <div style={{ marginBottom: '32px', display: 'flex', gap: '12px', overflowX: 'auto' }}>
-          {yatra.gallery.map((img, i) => (
-            <img key={i} src={getMediaUrl(img)} alt="Gallery" style={{ height: '100px', borderRadius: '8px', objectFit: 'cover' }} />
-          ))}
-        </div>
-      )}
+
 
       {isManagerOrAdmin ? (
         <>
@@ -877,7 +871,7 @@ const YatraDetails = () => {
             <div style={{ marginBottom: '20px', background: 'rgba(99,102,241,0.1)', padding: '16px', borderRadius: '10px', border: '1px solid rgba(99,102,241,0.2)' }}>
               <p style={{ fontWeight: '600', marginBottom: '12px', fontSize: '1rem' }}>💳 Payment Details</p>
               <p style={{ margin: '0 0 8px' }}><strong>Registration Fee:</strong> ₹{yatra.registrationFee}</p>
-              {yatra.bankDetails && <p style={{ margin: '0 0 8px' }}><strong>Bank Details:</strong> {yatra.bankDetails}</p>}
+
               {yatra.upiId && (
                 <div style={{ margin: '8px 0', padding: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
                   <p style={{ margin: 0, fontSize: '0.9rem' }}><strong>UPI ID:</strong> <span style={{ color: 'var(--accent-primary)', fontFamily: 'monospace', fontSize: '1rem', userSelect: 'all' }}>{yatra.upiId}</span></p>
@@ -941,10 +935,7 @@ const YatraDetails = () => {
                 <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9rem' }}>Registration Fee (₹)</label>
                 <input type="number" className="input-field" value={editYatraData.registrationFee} onChange={e => setEditYatraData({...editYatraData, registrationFee: Number(e.target.value)})} required />
               </div>
-              <div style={{ marginBottom: '12px' }}>
-                <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9rem' }}>Bank Details / Payment Info</label>
-                <textarea className="input-field" value={editYatraData.bankDetails} onChange={e => setEditYatraData({...editYatraData, bankDetails: e.target.value})} rows={2} />
-              </div>
+
               <div style={{ marginBottom: '12px' }}>
                 <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9rem' }}>UPI ID (optional)</label>
                 <input type="text" className="input-field" value={editYatraData.upiId || ''} onChange={e => setEditYatraData({...editYatraData, upiId: e.target.value})} />

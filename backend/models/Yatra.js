@@ -42,14 +42,8 @@ const yatraSchema = new mongoose.Schema({
         type: String,
         default: null
     },
-    gallery: {
-        type: [String],
-        default: []
-    },
-    bankDetails: {
-        type: String,
-        default: null
-    },
+
+
     upiId: {
         type: String,
         default: null

@@ -16,17 +16,7 @@ const expenseSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    paidBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-        description: "The user who made the payment."
-    },
-    splitAmong: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        description: "The users among whom this expense is split."
-    }],
+
     description: {
         type: String
     }
@@ -34,7 +24,7 @@ const expenseSchema = new mongoose.Schema({
 
 // Post-save hook to log expense creation
 expenseSchema.post('save', function(doc) {
-    console.log(`[Expense Model] Expense recorded: ${doc.name} ₹${doc.amount} (Split among ${doc.splitAmong.length} users)`);
+    console.log(`[Expense Model] Expense recorded: ${doc.name} ₹${doc.amount}`);
 });
 
 // Pre-update hook to log updates

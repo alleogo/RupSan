@@ -3,14 +3,14 @@ const uploadImageToCloudinary = require("../utils/cloudinaryUploader");
 
 exports.createYatra = async (req, res) => {
     try {
-        const { title, description, startDate, endDate, destination, registrationFee, bankDetails, upiId } = req.body;
+        const { title, description, startDate, endDate, destination, registrationFee, upiId } = req.body;
 
         if (!title || !description || !startDate || !endDate || !destination || registrationFee === undefined) {
             return res.status(400).json({ success: false, message: "All fields are required" });
         }
 
         let thumbnail = null;
-        let gallery = [];
+
         let qrCode = null;
 
         if (req.files) {
@@ -18,14 +18,7 @@ exports.createYatra = async (req, res) => {
                 const result = await uploadImageToCloudinary(req.files.thumbnail, `${process.env.FOLDER_NAME}/yatras`);
                 thumbnail = result.secure_url;
             }
-            if (req.files.gallery) {
-                // gallery can be a single file or an array of files
-                const galleryFiles = Array.isArray(req.files.gallery) ? req.files.gallery : [req.files.gallery];
-                for (const file of galleryFiles) {
-                    const result = await uploadImageToCloudinary(file, `${process.env.FOLDER_NAME}/yatras/gallery`);
-                    gallery.push(result.secure_url);
-                }
-            }
+
             if (req.files.qrCode) {
                 const result = await uploadImageToCloudinary(req.files.qrCode, `${process.env.FOLDER_NAME}/yatras`);
                 qrCode = result.secure_url;
@@ -39,10 +32,10 @@ exports.createYatra = async (req, res) => {
             endDate,
             destination,
             registrationFee,
-            bankDetails,
+
             upiId,
             thumbnail,
-            gallery,
+
             qrCode,
             createdBy: req.user.id
         });
