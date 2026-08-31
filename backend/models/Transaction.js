@@ -40,14 +40,5 @@ transactionSchema.index({ type: 1 });
 transactionSchema.index({ recordedBy: 1 });
 transactionSchema.index({ date: -1, category: 1, type: 1 });
 
-// Post-save hook to log transaction creation
-transactionSchema.post('save', function(doc) {
-    console.log(`[Transaction Model] Transaction recorded: ${doc.type} ₹${doc.amount} - ${doc.description} (Category: ${doc.category})`);
-});
-
-// Pre-delete hook to log deletions
-transactionSchema.pre('deleteOne', function() {
-    console.log(`[Transaction Model] Deleting transaction with ID: ${this.getFilter()._id}`);
-});
-
 module.exports = mongoose.model("Transaction", transactionSchema);
+

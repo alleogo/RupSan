@@ -43,7 +43,11 @@ const yatraSchema = new mongoose.Schema({
         default: null
     },
 
-
+    // bankDetails can also be added but I have removed it for future use
+    // bankDetails: {
+    //     type: String,
+    //     default: null
+    // },
     upiId: {
         type: String,
         default: null
@@ -54,15 +58,6 @@ const yatraSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-// Post-save hook to log yatra creation/update
-yatraSchema.post('save', function(doc) {
-    console.log(`[Yatra Model] Yatra saved: ${doc.title} (Status: ${doc.status}, Fee: ₹${doc.registrationFee})`);
-});
-
-// Pre-update hook to log updates
-yatraSchema.pre('findByIdAndUpdate', function() {
-    console.log(`[Yatra Model] Updating yatra with ID: ${this.getFilter()._id}`);
-});
-
 module.exports = mongoose.model("Yatra", yatraSchema);
+
 

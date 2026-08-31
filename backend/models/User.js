@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema({
     status: {
         type: String,
         enum: ["Pending", "Approved", "Rejected"],
-        default: function() {
+        default: function () {
             // Managers are pending by default. Participants and Admins are approved.
             if (this.role === "Manager") {
                 return "Pending";
@@ -56,7 +56,7 @@ const userSchema = new mongoose.Schema({
     verificationStatus: {
         type: String,
         enum: ["Unverified", "Pending", "Verified"],
-        default: function() {
+        default: function () {
             if (this.role === "Participant") return "Unverified";
             return "Verified"; // Admins and Managers are verified by default
         }
@@ -67,15 +67,5 @@ const userSchema = new mongoose.Schema({
         default: null
     }
 }, { timestamps: true });
-
-// Post-save hook to log user creation/update
-userSchema.post('save', function(doc) {
-    console.log(`[User Model] User saved: ${doc.email} (Role: ${doc.role}, Verification: ${doc.verificationStatus})`);
-});
-
-// Pre-update hook to log updates
-userSchema.pre('findByIdAndUpdate', function() {
-    console.log(`[User Model] Updating user with ID: ${this.getFilter()._id}`);
-});
 
 module.exports = mongoose.model("User", userSchema);
