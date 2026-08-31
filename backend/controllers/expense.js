@@ -1,6 +1,4 @@
 const Expense = require("../models/Expense");
-const YatraRegistration = require("../models/YatraRegistration");
-const Ticket = require("../models/Ticket");
 
 // Expense Controller - Handles expense tracking and splitting
 

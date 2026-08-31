@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FiLayout, FiUser, FiLogOut } from 'react-icons/fi';
 import { AuthContext } from '../context/AuthContext';
-import { useContext } from 'react';
 import { settingsApi, getMediaUrl } from '../utils/api';
 
 const Navbar = () => {

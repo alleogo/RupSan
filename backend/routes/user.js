@@ -9,3 +9,4 @@ router.get("/unverified", auth, isAdmin, getUnverifiedUsers);
 router.put("/verify/:userId", auth, isAdmin, verifyUser);
 
 module.exports = router;
+

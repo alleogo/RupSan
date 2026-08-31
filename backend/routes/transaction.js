@@ -11,3 +11,4 @@ router.put("/:id", auth, isManager, updateTransaction);
 router.delete("/:id", auth, isManager, deleteTransaction);
 
 module.exports = router;
+

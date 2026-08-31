@@ -27,8 +27,6 @@ app.use(fileUpload({
     limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit
 }));
 
-const path = require("path");
-
 // Connect DB
 connect();
 

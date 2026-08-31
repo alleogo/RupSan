@@ -9,12 +9,8 @@ cron.schedule('0 8 * * *', async () => {
         const startTime = new Date();
         console.log(`[Cron Job] Daily Yatra review job started at ${startTime.toISOString()}`);
         
-        // Find yatras that ended yesterday (or recently completed)
-        const today = new Date();
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        
         // Find ongoing yatras whose endDate has passed
+        const today = new Date();
         const endedYatras = await Yatra.find({
             status: "Ongoing",
             endDate: { $lt: today }

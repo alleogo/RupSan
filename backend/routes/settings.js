@@ -7,3 +7,4 @@ router.get("/", getSettings);
 router.put("/", auth, isManager, updateSettings);
 
 module.exports = router;
+

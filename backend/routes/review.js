@@ -8,3 +8,4 @@ router.get("/:yatraId", auth, getYatraReviews);
 router.put("/:id", auth, updateReview);
 
 module.exports = router;
+

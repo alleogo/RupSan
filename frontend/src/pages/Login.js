@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { AuthContext } from '../context/AuthContext';
-import { useContext } from 'react';
 
 const Login = () => {
   const navigate = useNavigate();

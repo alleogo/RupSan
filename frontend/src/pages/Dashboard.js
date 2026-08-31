@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { yatraApi, transactionApi, authApi, registrationApi, settingsApi, getMediaUrl } from '../utils/api';
+import { yatraApi, transactionApi, authApi, registrationApi, userApi, settingsApi, getMediaUrl } from '../utils/api';
 import ImageCropper from '../components/ImageCropper';
 
 const Dashboard = () => {
@@ -16,9 +16,8 @@ const Dashboard = () => {
   const [settings, setSettings] = useState(null);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [editingThumbnailType, setEditingThumbnailType] = useState('');
-  const [newThumbnailFile, setNewThumbnailFile] = useState(null);
   const [cropperImageSrc, setCropperImageSrc] = useState(null);
-  const { user } = React.useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,7 +32,7 @@ const Dashboard = () => {
         const yatrasRes = await yatraApi.getAll();
         let usersRes = null, managersRes = null;
         if (user?.role === 'Admin') {
-          usersRes = await require('../utils/api').userApi.getUnverified().catch(() => null);
+          usersRes = await userApi.getUnverified().catch(() => null);
           managersRes = await authApi.getPendingManagers().catch(() => null);
         }
         if (user?.role === 'Participant') {
@@ -56,11 +55,9 @@ const Dashboard = () => {
     fetchData();
   }, [user, navigate]);
 
-  const handleCreateYatra = () => {};
-
   const handleVerifyUser = async (userId, action) => {
     try {
-      const res = await require('../utils/api').userApi.verify(userId, action);
+      const res = await userApi.verify(userId, action);
       if (res.data.success) setUnverifiedUsers(unverifiedUsers.filter(u => u._id !== userId));
     } catch { alert("Failed to update user"); }
   };
@@ -85,7 +82,6 @@ const Dashboard = () => {
         setSettings(res.data.settings);
         setIsSettingsModalOpen(false);
         setCropperImageSrc(null);
-        setNewThumbnailFile(null);
       }
     } catch (error) {
       alert("Failed to update thumbnail");

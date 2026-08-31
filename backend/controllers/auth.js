@@ -2,6 +2,7 @@ const User = require("../models/User");
 const OTP = require("../models/OTP");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const otpGenerator = require("otp-generator");
 const mailSender = require("../utils/mailSender");
 require("dotenv").config();
 
@@ -12,7 +13,7 @@ exports.sendOTP = async (req, res) => {
     try {
         const { email } = req.body;
         console.log(`[sendOTP] Received request for email: ${email}`);
-        
+
         if (!email) {
             return res.status(400).json({ success: false, message: "Email is required" });
         }
@@ -22,19 +23,36 @@ exports.sendOTP = async (req, res) => {
             return res.status(401).json({ success: false, message: "User is already registered" });
         }
 
-        let otp = Math.floor(100000 + Math.random() * 900000).toString();
-        
-        await OTP.create({ email, otp });
+        var otp = otpGenerator.generate(6, {
+            upperCaseAlphabets: false,
+            lowerCaseAlphabets: false,
+            specialChars: false,
+        });
 
-        const mailResponse = await mailSender(
-            email, 
-            "Verification Email from Accounts Management", 
+        // Ensure unique OTP
+        let result = await OTP.findOne({ otp: otp });
+        while (result) {
+            otp = otpGenerator.generate(6, {
+                upperCaseAlphabets: false,
+                lowerCaseAlphabets: false,
+                specialChars: false,
+            });
+            result = await OTP.findOne({ otp: otp });
+        }
+
+        const otpPayload = { email, otp };
+        await OTP.create(otpPayload);
+
+        await mailSender(
+            email,
+            "Verification Email from Accounts Management",
             `<p>Your OTP is: <b>${otp}</b></p><p>This OTP is valid for 5 minutes.</p>`
         );
 
         return res.status(200).json({
             success: true,
-            message: "OTP sent successfully"
+            message: "OTP sent successfully",
+            otp,
         });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
@@ -71,7 +89,7 @@ exports.register = async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        
+
         const user = await User.create({
             firstName,
             lastName,
@@ -137,7 +155,7 @@ exports.login = async (req, res) => {
 exports.approveManager = async (req, res) => {
     try {
         const { managerId, action } = req.body; // action: 'Approve' or 'Reject'
-        
+
         if (!managerId || !action) {
             return res.status(400).json({ success: false, message: "Manager ID and action are required" });
         }

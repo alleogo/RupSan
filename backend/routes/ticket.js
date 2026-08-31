@@ -11,3 +11,4 @@ router.put("/:id", auth, isManager, updateTicket);
 router.delete("/:id", auth, isManager, deleteTicket);
 
 module.exports = router;
+

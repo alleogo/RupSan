@@ -17,3 +17,4 @@ router.post("/approve-manager", auth, isAdmin, approveManager);
 router.get("/pending-managers", auth, isAdmin, getPendingManagers);
 
 module.exports = router;
+

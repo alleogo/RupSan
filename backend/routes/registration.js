@@ -10,3 +10,4 @@ router.get("/:yatraId", auth, isManager, getYatraRegistrations);
 router.put("/approve/:registrationId", auth, isManager, approveRegistration);
 
 module.exports = router;
+

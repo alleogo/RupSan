@@ -53,17 +53,3 @@ exports.isManager = async (req, res, next) => {
     }
 };
 
-exports.isManagerOnly = async (req, res, next) => {
-  try {
-    // Allow Manager with Approved status or any Admin
-    if (req.user.role === 'Manager' && req.user.status === 'Approved') {
-      return next();
-    }
-    if (req.user.role === 'Admin') {
-      return next();
-    }
-    return res.status(401).json({ success: false, message: "Only Managers with approved accounts can perform this action" });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: "User role cannot be verified" });
-  }
-};

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import { Link, useNavigate } from 'react-router-dom';
@@ -25,7 +25,7 @@ const YatraManagement = () => {
     reader.readAsDataURL(file);
   };
 
-  const { user } = React.useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
