@@ -15,7 +15,6 @@ const settingsSchema = new mongoose.Schema({
     },
     navbarTitle: {
         type: String,
-        default: "Accounts Management"
     },
     navbarLogoText: {
         type: String,
