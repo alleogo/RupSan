@@ -447,9 +447,6 @@ p {
   }
 
   /* Dashboard section cards */
-  .section-card-image {
-    height: 170px !important;
-  }
   .section-card-body {
     padding: 20px !important;
   }

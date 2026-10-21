@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Button from './Button';
 
-// Shape of the yatra card thumbnail; the yatra thumbnail cropper uses the same shape so the crop matches the card
+// Shape of all thumbnails (yatra cards, yatra page, dashboard banners); their croppers use the same shape so the crop matches what is shown
 export const YATRA_CARD_ASPECT = { w: 5, h: 2 };
 export const YATRA_CARD_ASPECT_CSS = `${YATRA_CARD_ASPECT.w} / ${YATRA_CARD_ASPECT.h}`;
 

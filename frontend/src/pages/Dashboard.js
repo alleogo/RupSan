@@ -4,7 +4,7 @@ import Button from '../components/Button';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { yatraApi, transactionApi, authApi, registrationApi, userApi, settingsApi, getMediaUrl } from '../utils/api';
-import ImageCropper, { YATRA_CARD_ASPECT_CSS } from '../components/ImageCropper';
+import ImageCropper, { YATRA_CARD_ASPECT, YATRA_CARD_ASPECT_CSS } from '../components/ImageCropper';
 
 const Dashboard = () => {
   const [ledgerSummary, setLedgerSummary] = useState({ totalIncome: 0, totalExpense: 0, balance: 0 });
@@ -183,7 +183,7 @@ const Dashboard = () => {
 
               {/* === ACCOUNTS MANAGEMENT CARD === */}
               <div style={{ background: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--glass-border)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                <div className="section-card-image" style={{ width: '100%', height: '260px', background: 'linear-gradient(135deg,rgba(16,185,129,0.25),rgba(16,185,129,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div className="section-card-image" style={{ width: '100%', aspectRatio: YATRA_CARD_ASPECT_CSS, minHeight: 0, overflow: 'hidden', background: 'linear-gradient(135deg,rgba(16,185,129,0.25),rgba(16,185,129,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {settings?.accountsThumbnail ? (
                     <img src={getMediaUrl(settings.accountsThumbnail)} alt="Accounts" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : null}
@@ -217,7 +217,7 @@ const Dashboard = () => {
 
               {/* === YATRA MANAGEMENT CARD === */}
               <div style={{ background: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--glass-border)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                <div className="section-card-image" style={{ width: '100%', height: '260px', background: 'linear-gradient(135deg,rgba(99,102,241,0.25),rgba(99,102,241,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div className="section-card-image" style={{ width: '100%', aspectRatio: YATRA_CARD_ASPECT_CSS, minHeight: 0, overflow: 'hidden', background: 'linear-gradient(135deg,rgba(99,102,241,0.25),rgba(99,102,241,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {settings?.yatraThumbnail ? (
                     <img src={getMediaUrl(settings.yatraThumbnail)} alt="Yatra" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : null}
@@ -321,6 +321,7 @@ const Dashboard = () => {
           <div className="animate-fade-in" style={{ width: '100%', maxWidth: '640px', margin: 'auto' }}>
             {cropperImageSrc ? (
               <ImageCropper
+                aspect={YATRA_CARD_ASPECT}
                 imageSrc={cropperImageSrc}
                 onCrop={(blob) => handleUpdateThumbnail(blob)}
                 onCancel={() => { setCropperImageSrc(null); setIsSettingsModalOpen(false); }}
