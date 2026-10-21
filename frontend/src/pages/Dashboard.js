@@ -125,7 +125,6 @@ const Dashboard = () => {
             style={{ width: '100%', aspectRatio: YATRA_CARD_ASPECT_CSS, objectFit: 'cover', display: 'block' }} />
         ) : (
           <div style={{ width: '100%', height: '100px', background: 'linear-gradient(135deg,rgba(99,102,241,0.25),rgba(16,185,129,0.15))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: '2.5rem' }}>🛕</span>
           </div>
         )}
         <div style={{ padding: '16px' }}>
@@ -223,9 +222,7 @@ const Dashboard = () => {
                 <div className="section-card-image" style={{ width: '100%', height: '260px', background: 'linear-gradient(135deg,rgba(99,102,241,0.25),rgba(99,102,241,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {settings?.yatraThumbnail ? (
                     <img src={getMediaUrl(settings.yatraThumbnail)} alt="Yatra" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    <span style={{ fontSize: '6rem' }}>🛕</span>
-                  )}
+                  ) : null}
                 </div>
                 <div className="section-card-body" style={{ padding: '32px', flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>

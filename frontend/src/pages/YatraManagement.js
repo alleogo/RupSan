@@ -94,7 +94,6 @@ const YatraManagement = () => {
             style={{ width: '100%', aspectRatio: YATRA_CARD_ASPECT_CSS, objectFit: 'cover', display: 'block' }} />
         ) : (
           <div style={{ width: '100%', height: '100px', background: 'linear-gradient(135deg,rgba(99,102,241,0.25),rgba(16,185,129,0.15))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: '2.5rem' }}>🛕</span>
           </div>
         )}
         <div style={{ padding: '16px' }}>
@@ -128,7 +127,7 @@ const YatraManagement = () => {
       <div className="animate-fade-in" style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>🛕 Yatra Management</h1>
+            <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>Yatra Management</h1>
             <p>Manage active yatras or create a new one.</p>
           </div>
           {(user?.role === 'Manager' && user?.status === 'Approved') || user?.role === 'Admin' ? (
