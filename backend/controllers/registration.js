@@ -49,19 +49,21 @@ exports.registerForYatra = async (req, res) => {
             status: "Pending"
         });
 
-        // Notify the yatra's manager and all admins of the new enrollment request
-        const approvers = await User.find({ $or: [{ role: "Admin" }, { _id: yatra.createdBy }] }).select("email firstName");
-        const siteUrl = req.headers.origin || `${req.protocol}://${req.get("host")}`;
-        await Promise.all(approvers.map(approver => mailSender(
-            approver.email,
-            `Yatra Enrollment Request: ${yatra.title}`,
-            `<p>Dear ${approver.firstName},</p>
-             <p><b>${user.firstName} ${user.lastName}</b> (${user.email}) has enrolled in <b>${yatra.title}</b> and is awaiting approval.</p>
-             ${paymentRefId ? `<p>Payment Reference: ${paymentRefId}</p>` : ""}
-             <p>Please <a href="${siteUrl}/yatra/${yatra._id}">open the Yatra page</a> to approve or reject this enrollment.</p>
-             <p>Thank you!</p>`
-        )));
-        console.log(`[registerForYatra] Sent enrollment request for ${user.email} to ${approvers.length} approver(s)`);
+        // Notify the manager who created the yatra of the new enrollment request
+        const manager = await User.findById(yatra.createdBy).select("email firstName");
+        if (manager) {
+            const siteUrl = req.headers.origin || `${req.protocol}://${req.get("host")}`;
+            await mailSender(
+                manager.email,
+                `Yatra Enrollment Request: ${yatra.title}`,
+                `<p>Dear ${manager.firstName},</p>
+                 <p><b>${user.firstName} ${user.lastName}</b> (${user.email}) has enrolled in <b>${yatra.title}</b> and is awaiting approval.</p>
+                 ${paymentRefId ? `<p>Payment Reference: ${paymentRefId}</p>` : ""}
+                 <p>Please <a href="${siteUrl}/yatra/${yatra._id}">open the Yatra page</a> to approve or reject this enrollment.</p>
+                 <p>Thank you!</p>`
+            );
+            console.log(`[registerForYatra] Sent enrollment request for ${user.email} to manager ${manager.email}`);
+        }
 
         return res.status(201).json({
             success: true,
