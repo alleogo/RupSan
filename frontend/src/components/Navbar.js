@@ -4,16 +4,22 @@ import { FiLayout, FiUser, FiLogOut } from 'react-icons/fi';
 import { AuthContext } from '../context/AuthContext';
 import { settingsApi, getMediaUrl } from '../utils/api';
 
+// Built-in branding shown before settings load; keep in sync with the saved settings to avoid a flash
+const DEFAULT_BRANDING = {
+  navbarTitle: 'RupSan',
+  navbarLogoText: 'RS',
+  navbarLogo: 'https://res.cloudinary.com/ddxkr8fim/image/upload/v1785143094/RupSa/settings/nwexflkcesdzjault426.jpg'
+};
+
 const Navbar = () => {
-  // Start from the last-seen settings so the branding doesn't flash the defaults on load
+  // Start from the last-seen settings (or the built-in branding) so nothing flashes on load
   const [settings, setSettings] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem('navbarSettings'));
+      return JSON.parse(localStorage.getItem('navbarSettings')) || DEFAULT_BRANDING;
     } catch {
-      return null;
+      return DEFAULT_BRANDING;
     }
   });
-  const [settingsLoaded, setSettingsLoaded] = useState(() => settings !== null);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -27,8 +33,6 @@ const Navbar = () => {
         }
       } catch (error) {
         console.error("Failed to fetch settings", error);
-      } finally {
-        setSettingsLoaded(true);
       }
     };
     fetchSettings();
@@ -59,7 +63,7 @@ const Navbar = () => {
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
         <div style={{ display: 'block', width: '80px', height: '80px', flexShrink: 0, filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.5))' }}>
-          {!settingsLoaded ? null : settings?.navbarLogo ? (
+          {settings?.navbarLogo ? (
             <img src={getMediaUrl(settings.navbarLogo)} alt="Logo" style={{
               width: '100%', height: '100%', borderRadius: '12px', objectFit: 'cover'
             }} />
@@ -80,7 +84,7 @@ const Navbar = () => {
               boxShadow: 'inset 0 0 10px rgba(255,255,255,0.8), inset 0 -2px 5px rgba(0,0,0,0.3)',
               textShadow: '1px 1px 1px rgba(255,255,255,0.7), -1px -1px 1px rgba(0,0,0,0.2)'
             }}>
-              {settings?.navbarLogoText || 'AM'}
+              {settings?.navbarLogoText || 'RS'}
             </div>
           )}
         </div>
@@ -97,7 +101,7 @@ const Navbar = () => {
             paddingBottom: '4px',
             filter: 'drop-shadow(2px 3px 3px rgba(0,0,0,0.7)) drop-shadow(0 0 15px rgba(255,215,0,0.25))'
           }}>
-            {settingsLoaded && (settings?.navbarTitle || 'Accounts Management')}
+            {settings?.navbarTitle || 'RupSan'}
           </h2>
         </div>
       </div>
