@@ -20,8 +20,16 @@ export const AuthProvider = ({ children }) => {
     const storedUser = localStorage.getItem('user');
 
     if (token && storedUser) {
-      // Make a lightweight authenticated request to verify the token is still valid
-      api.get('/yatra')
+      // Verify the token is still valid and refresh the stored user details
+      api.get('/auth/me')
+        .then((res) => {
+          // Only update when the details changed, so pages that depend on `user` don't refetch
+          const fresh = res.data.success && res.data.user ? JSON.stringify(res.data.user) : null;
+          if (fresh && fresh !== localStorage.getItem('user')) {
+            localStorage.setItem('user', fresh);
+            setUser(res.data.user);
+          }
+        })
         .catch(() => {
           // Token is expired or invalid — clear the stale session
           localStorage.removeItem('token');

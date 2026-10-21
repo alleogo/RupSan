@@ -61,11 +61,23 @@ const YatraDetails = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const yatraRes = await yatraApi.getById(id);
+        const isManagerOrAdmin = user?.role === 'Admin' || user?.role === 'Manager';
+
+        // Load everything in parallel. Pending enrollment requests are only returned to the yatra's
+        // own manager (or an admin); the server refuses other managers, which we treat as "none".
+        const [yatraRes, reviewRes, myStatusRes, expRes, tickRes, logRes, reqRes] = await Promise.all([
+          yatraApi.getById(id),
+          reviewApi.getAll(id).catch(() => null),
+          registrationApi.myStatus(id).catch(() => null),
+          isManagerOrAdmin ? expenseApi.getAll(id).catch(() => null) : null,
+          isManagerOrAdmin ? ticketApi.getAll(id).catch(() => null) : null,
+          isManagerOrAdmin ? registrationApi.getAll(id, { status: 'Approved' }).catch(() => null) : null,
+          isManagerOrAdmin ? registrationApi.getAll(id, { status: 'Pending' }).catch(() => null) : null
+        ]);
+
         if (yatraRes.data.success) setYatra(yatraRes.data.yatra);
 
-        const reviewRes = await reviewApi.getAll(id).catch(e => null);
-        if (reviewRes && reviewRes.data.success) {
+        if (reviewRes?.data.success) {
           const list = reviewRes.data.reviews;
           setReviews(list);
           const existing = list.find(r => r.user?._id === user?.id || r.user?._id === user?._id || r.user === user?.id || r.user === user?._id);
@@ -74,33 +86,16 @@ const YatraDetails = () => {
           }
         }
 
-        const myStatusRes = await registrationApi.myStatus(id).catch(e => null);
-        if (myStatusRes && myStatusRes.data.success && myStatusRes.data.registration) {
+        if (myStatusRes?.data.success && myStatusRes.data.registration) {
           const reg = myStatusRes.data.registration;
           setMyRegStatus(reg);
           setMyRegDetails(reg); // store full details for financial display
         }
 
-        const isManagerOrAdmin = user?.role === 'Admin' || user?.role === 'Manager';
-        const fetchedYatra = yatraRes.data.yatra;
-        const currentUserId = user?._id || user?.id;
-        // Only the yatra's own manager (or an admin) can see its enrollment requests
-        const canSeeRequests = user?.role === 'Admin' ||
-          (fetchedYatra?.createdBy?._id || fetchedYatra?.createdBy)?.toString() === currentUserId?.toString();
-        
-        if (isManagerOrAdmin) {
-          const [expRes, tickRes, logRes, reqRes] = await Promise.all([
-            expenseApi.getAll(id),
-            ticketApi.getAll(id),
-            registrationApi.getAll(id, { status: 'Approved' }),
-            canSeeRequests ? registrationApi.getAll(id, { status: 'Pending' }) : null
-          ]);
-
-          if (expRes.data.success) setExpenses(expRes.data.expenses);
-          if (tickRes.data.success) setTickets(tickRes.data.tickets);
-          if (logRes.data.success) setRegistrationsLog(logRes.data.registrations);
-          if (reqRes?.data.success) setRequests(reqRes.data.registrations);
-        }
+        if (expRes?.data.success) setExpenses(expRes.data.expenses);
+        if (tickRes?.data.success) setTickets(tickRes.data.tickets);
+        if (logRes?.data.success) setRegistrationsLog(logRes.data.registrations);
+        if (reqRes?.data.success) setRequests(reqRes.data.registrations);
       } catch (error) {
         console.error("Failed to fetch yatra details:", error);
       } finally {
