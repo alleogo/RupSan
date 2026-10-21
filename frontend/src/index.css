@@ -454,18 +454,10 @@ p {
     padding: 20px !important;
   }
 
-  /* Yatra details header: stack image above the title */
-  .yatra-header,
-  .yatra-header-main {
-    flex-direction: column;
-  }
-  .yatra-header-main {
-    gap: 16px !important;
-    width: 100%;
-  }
-  .yatra-thumb {
-    width: 100% !important;
-    height: 200px !important;
+  /* Yatra details header: stack the thumbnail above the details */
+  .yatra-header {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
   }
   .yatra-title {
     font-size: 1.8rem !important;
@@ -475,6 +467,16 @@ p {
   }
   .owner-bar > button {
     flex: 1;
+    padding: 8px 10px !important;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+  .tab-row {
+    gap: 8px !important;
+  }
+  .tab-row > button {
+    padding: 8px 12px !important;
+    font-size: 0.85rem;
   }
 
   /* Tables scroll sideways instead of squashing */

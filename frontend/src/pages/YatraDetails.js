@@ -4,7 +4,7 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import { yatraApi, expenseApi, ticketApi, registrationApi, reviewApi, getMediaUrl } from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
-import ImageCropper, { YATRA_CARD_ASPECT } from '../components/ImageCropper';
+import ImageCropper, { YATRA_CARD_ASPECT, YATRA_CARD_ASPECT_CSS } from '../components/ImageCropper';
 
 const YatraDetails = () => {
   const { id } = useParams();
@@ -341,49 +341,66 @@ const YatraDetails = () => {
   const isManagerOrAdmin = user?.role === 'Admin' || user?.role === 'Manager';
   const userId = user?._id || user?.id;
   const isYatraOwner = (yatra?.createdBy?._id || yatra?.createdBy)?.toString() === userId?.toString();
+  const statusColor = yatra.status === 'Ongoing' ? 'var(--accent-success)' : yatra.status === 'Completed' ? 'var(--text-secondary)' : 'var(--accent-primary)';
+  const statusBg = yatra.status === 'Ongoing' ? 'rgba(16,185,129,0.15)' : yatra.status === 'Completed' ? 'rgba(255,255,255,0.08)' : 'rgba(212,175,55,0.15)';
+  const metaChipStyle = { display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '20px', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '0.85rem' };
 
   return (
     <>
       <div className="animate-fade-in" style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
-      <div className="yatra-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px', flexWrap: 'wrap', gap: '12px' }}>
-        <div className="yatra-header-main" style={{ display: 'flex', gap: '24px' }}>
+      {/* Header: 5:2 thumbnail (same shape as the yatra cards) beside the yatra details */}
+      <div className="yatra-header" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 9fr) minmax(0, 11fr)', gap: '32px', alignItems: 'center', marginBottom: '32px' }}>
+        <div style={{ width: '100%', aspectRatio: YATRA_CARD_ASPECT_CSS, borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--border-color)', background: 'linear-gradient(135deg,rgba(212,175,55,0.18),rgba(16,185,129,0.12))', boxShadow: 'var(--glass-shadow)' }}>
           {yatra.thumbnail && (
-            <img src={getMediaUrl(yatra.thumbnail)} alt={yatra.title} className="yatra-thumb" style={{ width: '150px', height: '150px', objectFit: 'cover', borderRadius: '12px' }} />
+            <img src={getMediaUrl(yatra.thumbnail)} alt={yatra.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           )}
-          <div>
-            <h1 className="yatra-title" style={{ fontSize: '2.5rem', marginBottom: '8px' }}>{yatra.title}</h1>
-            <p style={{ color: 'var(--text-secondary)' }}>Destination: {yatra.destination} | Starts: {new Date(yatra.startDate).toLocaleDateString()} | Fee: ₹{yatra.registrationFee}</p>
-            <p style={{ marginTop: '12px' }}>{yatra.description}</p>
-          </div>
         </div>
-        {(user?.role === 'Participant' || user?.role === 'Manager' || user?.role === 'Admin') && yatra.status !== 'Completed' && (
-          myRegStatus ? (
-            <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              {myRegStatus.status === 'Pending' && (
-                <span style={{ background: 'rgba(245, 158, 11, 0.15)', color: 'var(--accent-warning)', padding: '8px 16px', borderRadius: '8px', fontWeight: '600', fontSize: '0.95rem', display: 'inline-block', whiteSpace: 'nowrap' }}>
-                  ⏳ Enrollment Pending Approval
-                </span>
-              )}
-              {myRegStatus.status === 'Approved' && (
-                <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-success)', padding: '8px 16px', borderRadius: '8px', fontWeight: '600', fontSize: '0.95rem', display: 'inline-block', whiteSpace: 'nowrap' }}>
-                  ✅ Registered
-                </span>
-              )}
-              {myRegStatus.status === 'Rejected' && (
-                <span style={{ background: 'rgba(239, 68, 68, 0.15)', color: 'var(--accent-danger)', padding: '8px 16px', borderRadius: '8px', fontWeight: '600', fontSize: '0.95rem', display: 'inline-block', whiteSpace: 'nowrap' }}>
-                  ❌ Enrollment Rejected
-                </span>
-              )}
-            </div>
-          ) : (
-            <Button variant="primary" onClick={() => setEnrollModalOpen(true)} style={{ width: 'auto' }}>Enroll in Yatra</Button>
-          )
-        )}
+
+        <div>
+          {yatra.status && (
+            <span style={{ display: 'inline-block', background: statusBg, color: statusColor, padding: '4px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '600', marginBottom: '12px' }}>
+              {yatra.status}
+            </span>
+          )}
+          <h1 className="yatra-title" style={{ fontSize: '2.4rem', lineHeight: 1.15, marginBottom: '16px' }}>{yatra.title}</h1>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+            <span style={metaChipStyle}>📍 {yatra.destination}</span>
+            <span style={metaChipStyle}>📅 {new Date(yatra.startDate).toLocaleDateString()} – {new Date(yatra.endDate).toLocaleDateString()}</span>
+            <span style={metaChipStyle}>💰 ₹{Number(yatra.registrationFee || 0).toLocaleString('en-IN')}</span>
+          </div>
+
+          {yatra.description && <p style={{ marginBottom: '20px' }}>{yatra.description}</p>}
+
+          {(user?.role === 'Participant' || user?.role === 'Manager' || user?.role === 'Admin') && yatra.status !== 'Completed' && (
+            myRegStatus ? (
+              <div>
+                {myRegStatus.status === 'Pending' && (
+                  <span style={{ background: 'rgba(245, 158, 11, 0.15)', color: 'var(--accent-warning)', padding: '8px 16px', borderRadius: '8px', fontWeight: '600', fontSize: '0.95rem', display: 'inline-block', whiteSpace: 'nowrap' }}>
+                    ⏳ Enrollment Pending Approval
+                  </span>
+                )}
+                {myRegStatus.status === 'Approved' && (
+                  <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-success)', padding: '8px 16px', borderRadius: '8px', fontWeight: '600', fontSize: '0.95rem', display: 'inline-block', whiteSpace: 'nowrap' }}>
+                    ✅ Registered
+                  </span>
+                )}
+                {myRegStatus.status === 'Rejected' && (
+                  <span style={{ background: 'rgba(239, 68, 68, 0.15)', color: 'var(--accent-danger)', padding: '8px 16px', borderRadius: '8px', fontWeight: '600', fontSize: '0.95rem', display: 'inline-block', whiteSpace: 'nowrap' }}>
+                    ❌ Enrollment Rejected
+                  </span>
+                )}
+              </div>
+            ) : (
+              <Button variant="primary" onClick={() => setEnrollModalOpen(true)} style={{ width: 'auto', padding: '10px 28px' }}>Enroll in Yatra</Button>
+            )
+          )}
+        </div>
       </div>
 
       {/* Participant financial summary when approved */}
       {user?.role === 'Participant' && myRegDetails?.status === 'Approved' && (
-        <div style={{ marginBottom: '24px', padding: '16px', background: 'rgba(99,102,241,0.07)', borderRadius: '12px', border: '1px solid rgba(99,102,241,0.2)' }}>
+        <div style={{ marginBottom: '24px', padding: '16px', background: 'rgba(212,175,55,0.05)', borderRadius: '12px', border: '1px solid var(--border-gold)' }}>
           <h3 style={{ marginBottom: '12px', fontSize: '1rem' }}>💳 My Payment Summary</h3>
           <div className="stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
             <div style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
@@ -404,11 +421,11 @@ const YatraDetails = () => {
 
       {/* Edit / Delete Yatra buttons - only for the yatra's own manager or admin */}
       {isYatraOwner && (
-        <div className="owner-bar" style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '28px', padding: '16px', background: 'rgba(99,102,241,0.06)', borderRadius: '12px', border: '1px solid rgba(99,102,241,0.2)', alignItems: 'center' }}>
-          <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', flex: 1 }}>You manage this Yatra</span>
+        <div className="owner-bar" style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '28px', padding: '14px 16px', background: 'rgba(212,175,55,0.05)', borderRadius: '12px', border: '1px solid var(--border-gold)', alignItems: 'center' }}>
+          <span style={{ color: 'var(--accent-secondary)', fontSize: '0.9rem', fontWeight: '500', flex: 1 }}>You manage this Yatra</span>
           <Button
             variant="default"
-            style={{ width: 'auto', padding: '8px 20px', border: '1px solid rgba(99,102,241,0.4)' }}
+            style={{ width: 'auto', padding: '8px 20px' }}
             onClick={() => {
               setEditYatraData({
                 title: yatra.title,
@@ -439,7 +456,7 @@ const YatraDetails = () => {
 
       {isManagerOrAdmin ? (
         <>
-          <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
+          <div className="tab-row" style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
             <Button variant={activeTab === 'expenses' ? 'primary' : 'default'} onClick={() => setActiveTab('expenses')} style={{ width: 'auto' }}>Expenses</Button>
             <Button variant={activeTab === 'tickets' ? 'primary' : 'default'} onClick={() => setActiveTab('tickets')} style={{ width: 'auto' }}>Tickets</Button>
             <Button variant={activeTab === 'registrationsLog' ? 'primary' : 'default'} onClick={() => setActiveTab('registrationsLog')} style={{ width: 'auto' }}>Registrations Log</Button>
@@ -626,7 +643,7 @@ const YatraDetails = () => {
         </>
       ) : (
         <>
-          <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+          <div className="tab-row" style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
             <Button variant={activeTab === 'reviews' ? 'primary' : 'default'} onClick={() => setActiveTab('reviews')} style={{ width: 'auto' }}>Reviews</Button>
           </div>
           

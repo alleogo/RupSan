@@ -110,7 +110,7 @@ const Dashboard = () => {
     const paidTotal = (myReg?.paidOnline || 0) + (myReg?.paidCash || 0);
     const leftToPay = myReg ? Math.max(0, (myReg.amountToBePaid || 0) - paidTotal) : null;
     const statusColor = yatra.status === 'Ongoing' ? 'var(--accent-success)' : yatra.status === 'Completed' ? 'var(--text-secondary)' : 'var(--accent-primary)';
-    const statusBg = yatra.status === 'Ongoing' ? 'rgba(16,185,129,0.15)' : yatra.status === 'Completed' ? 'rgba(255,255,255,0.08)' : 'rgba(99,102,241,0.15)';
+    const statusBg = yatra.status === 'Ongoing' ? 'rgba(16,185,129,0.15)' : yatra.status === 'Completed' ? 'rgba(255,255,255,0.08)' : 'rgba(212,175,55,0.15)';
 
     const userId = user?._id || user?.id;
     const isOwner = (yatra?.createdBy?._id || yatra?.createdBy)?.toString() === userId?.toString();
@@ -124,7 +124,7 @@ const Dashboard = () => {
           <img src={getMediaUrl(yatra.thumbnail)} alt={yatra.title}
             style={{ width: '100%', aspectRatio: YATRA_CARD_ASPECT_CSS, objectFit: 'cover', display: 'block' }} />
         ) : (
-          <div style={{ width: '100%', height: '100px', background: 'linear-gradient(135deg,rgba(99,102,241,0.25),rgba(16,185,129,0.15))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '100%', height: '100px', background: 'linear-gradient(135deg,rgba(212,175,55,0.18),rgba(16,185,129,0.12))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           </div>
         )}
         <div style={{ padding: '16px' }}>
