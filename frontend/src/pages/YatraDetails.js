@@ -353,19 +353,19 @@ const YatraDetails = () => {
         </div>
         {(user?.role === 'Participant' || user?.role === 'Manager' || user?.role === 'Admin') && yatra.status !== 'Completed' && (
           myRegStatus ? (
-            <div style={{ textAlign: 'right' }}>
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
               {myRegStatus.status === 'Pending' && (
-                <span style={{ background: 'rgba(245, 158, 11, 0.15)', color: 'var(--accent-warning)', padding: '8px 16px', borderRadius: '8px', fontWeight: '600', fontSize: '0.95rem' }}>
+                <span style={{ background: 'rgba(245, 158, 11, 0.15)', color: 'var(--accent-warning)', padding: '8px 16px', borderRadius: '8px', fontWeight: '600', fontSize: '0.95rem', display: 'inline-block', whiteSpace: 'nowrap' }}>
                   ⏳ Enrollment Pending Approval
                 </span>
               )}
               {myRegStatus.status === 'Approved' && (
-                <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-success)', padding: '8px 16px', borderRadius: '8px', fontWeight: '600', fontSize: '0.95rem' }}>
+                <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-success)', padding: '8px 16px', borderRadius: '8px', fontWeight: '600', fontSize: '0.95rem', display: 'inline-block', whiteSpace: 'nowrap' }}>
                   ✅ Registered
                 </span>
               )}
               {myRegStatus.status === 'Rejected' && (
-                <span style={{ background: 'rgba(239, 68, 68, 0.15)', color: 'var(--accent-danger)', padding: '8px 16px', borderRadius: '8px', fontWeight: '600', fontSize: '0.95rem' }}>
+                <span style={{ background: 'rgba(239, 68, 68, 0.15)', color: 'var(--accent-danger)', padding: '8px 16px', borderRadius: '8px', fontWeight: '600', fontSize: '0.95rem', display: 'inline-block', whiteSpace: 'nowrap' }}>
                   ❌ Enrollment Rejected
                 </span>
               )}
