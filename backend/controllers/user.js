@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const mailSender = require("../utils/mailSender");
 
 // Update Profile
 exports.updateProfile = async (req, res) => {
@@ -46,8 +47,25 @@ exports.requestVerification = async (req, res) => {
             return res.status(400).json({ success: false, message: "Aadhar, Name, Phone Number, and Centre are required to request verification." });
         }
 
+        const alreadyPending = user.verificationStatus === "Pending";
         user.verificationStatus = "Pending";
         await user.save();
+
+        // Notify all admins of the new verification request (skip repeat requests while still pending)
+        if (!alreadyPending) {
+            const admins = await User.find({ role: "Admin" }).select("email firstName");
+            const siteUrl = req.headers.origin || `${req.protocol}://${req.get("host")}`;
+            await Promise.all(admins.map(admin => mailSender(
+                admin.email,
+                `Participant Verification Request: ${user.firstName} ${user.lastName}`,
+                `<p>Dear ${admin.firstName},</p>
+                 <p><b>${user.firstName} ${user.lastName}</b> (${user.email}) has requested account verification.</p>
+                 <p>Phone: ${user.phoneNumber}<br/>Centre: ${user.centre}</p>
+                 <p>Please <a href="${siteUrl}/">log in to the dashboard</a> to verify or reject this request.</p>
+                 <p>Thank you!</p>`
+            )));
+            console.log(`[requestVerification] Sent verification request for ${user.email} to ${admins.length} admin(s)`);
+        }
 
         user.password = undefined;
         return res.status(200).json({ success: true, message: "Verification requested successfully", user });
