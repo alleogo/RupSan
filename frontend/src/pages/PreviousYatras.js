@@ -35,7 +35,7 @@ const PreviousYatras = () => {
         </div>
       )}
       <div style={{ padding: '16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px', flexWrap: 'wrap', gap: '12px' }}>
           <h3 style={{ fontSize: '1.1rem', flex: 1 }}>{yatra.title}</h3>
           <span style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--text-secondary)', padding: '3px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '600', marginLeft: '8px', whiteSpace: 'nowrap' }}>
             Completed
@@ -67,7 +67,7 @@ const PreviousYatras = () => {
       <p style={{ marginBottom: '32px' }}>View all past and completed yatras.</p>
       
       {pastYatras.length > 0 ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 100%), 1fr))', gap: '20px' }}>
           {pastYatras.map(y => <YatraCard key={y._id} yatra={y} />)}
         </div>
       ) : (

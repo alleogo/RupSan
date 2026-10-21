@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FiLayout, FiUser, FiLogOut } from 'react-icons/fi';
+import { FiLayout, FiUser, FiLogOut, FiMenu, FiX } from 'react-icons/fi';
 import { AuthContext } from '../context/AuthContext';
 import { settingsApi, getMediaUrl } from '../utils/api';
 
@@ -39,6 +39,12 @@ const Navbar = () => {
   }, []);
   const location = useLocation();
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Close the mobile menu whenever the page changes
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
   const { user, logout } = useContext(AuthContext);
   
   const isActive = (path) => location.pathname === path ? 'var(--accent-primary)' : 'var(--text-secondary)';
@@ -49,7 +55,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav style={{ 
+    <nav className="navbar" style={{ 
       background: 'var(--glass-bg)', 
       backdropFilter: 'blur(12px)',
       borderBottom: '1px solid var(--glass-border)',
@@ -61,8 +67,8 @@ const Navbar = () => {
       top: 0,
       zIndex: 100
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-        <div style={{ display: 'block', width: '80px', height: '80px', flexShrink: 0, filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.5))' }}>
+      <div className="navbar-brand" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <div className="navbar-logo" style={{ display: 'block', width: '80px', height: '80px', flexShrink: 0, filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.5))' }}>
           {settings?.navbarLogo ? (
             <img src={getMediaUrl(settings.navbarLogo)} alt="Logo" style={{
               width: '100%', height: '100%', borderRadius: '12px', objectFit: 'cover'
@@ -89,7 +95,7 @@ const Navbar = () => {
           )}
         </div>
         <div style={{ position: 'relative' }}>
-          <h2 style={{ 
+          <h2 className="navbar-title" style={{ 
             fontSize: '2.8rem', 
             margin: 0, 
             fontFamily: '"Playfair Display", "Cinzel", serif',
@@ -106,7 +112,16 @@ const Navbar = () => {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
+      <button
+        className="navbar-toggle"
+        onClick={() => setMenuOpen(open => !open)}
+        aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+        aria-expanded={menuOpen}
+      >
+        {menuOpen ? <FiX /> : <FiMenu />}
+      </button>
+
+      <div className={`navbar-links${menuOpen ? ' open' : ''}`} style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
         <Link to="/" style={{ color: isActive('/'), textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '500', transition: 'var(--transition-fast)' }}>
           <FiLayout /> Dashboard
         </Link>

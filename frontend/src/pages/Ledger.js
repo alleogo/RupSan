@@ -155,7 +155,7 @@ const Ledger = () => {
       </div>
 
       {/* Summary Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(250px, 100%), 1fr))', gap: '20px', marginBottom: '32px' }}>
         <Card>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '8px' }}>Total Income</p>
           <p style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--accent-success)' }}>
@@ -185,7 +185,7 @@ const Ledger = () => {
           <Button onClick={() => setIsModalOpen(true)}>+ Add Transaction</Button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(150px, 100%), 1fr))', gap: '12px' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Start Date</label>
             <input
@@ -248,7 +248,7 @@ const Ledger = () => {
         ) : transactions.length === 0 ? (
           <p style={{ color: 'var(--text-secondary)', textAlign: 'center' }}>No transactions found</p>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
+          <div className="table-scroll" style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--glass-border)' }}>

@@ -98,7 +98,7 @@ const YatraManagement = () => {
           </div>
         )}
         <div style={{ padding: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px', flexWrap: 'wrap', gap: '12px' }}>
             <h3 style={{ fontSize: '1.1rem', flex: 1 }}>{yatra.title}</h3>
             <span style={{ background: statusBg, color: statusColor, padding: '3px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '600', marginLeft: '8px', whiteSpace: 'nowrap' }}>
               {yatra.status}
@@ -126,7 +126,7 @@ const YatraManagement = () => {
   return (
     <>
       <div className="animate-fade-in" style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>🛕 Yatra Management</h1>
             <p>Manage active yatras or create a new one.</p>
@@ -147,7 +147,7 @@ const YatraManagement = () => {
             <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '400' }}>({myCreatedYatras.length})</span>
           </h2>
           {myCreatedYatras.length > 0 ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 100%), 1fr))', gap: '20px' }}>
               {myCreatedYatras.map(y => <YatraCard key={y._id} yatra={y} />)}
             </div>
           ) : (
@@ -164,7 +164,7 @@ const YatraManagement = () => {
           {otherActiveYatras.length === 0 ? (
             <p style={{ color: 'var(--text-secondary)' }}>No other active yatras.</p>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 100%), 1fr))', gap: '20px' }}>
               {otherActiveYatras.map(y => <YatraCard key={y._id} yatra={y} />)}
             </div>
           )}

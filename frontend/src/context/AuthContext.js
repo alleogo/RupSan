@@ -4,7 +4,14 @@ import api from '../utils/api';
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  // Restore the stored session immediately so pages don't redirect to login before validation finishes
+  const [user, setUser] = useState(() => {
+    try {
+      return localStorage.getItem('token') ? JSON.parse(localStorage.getItem('user')) : null;
+    } catch {
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -15,14 +22,11 @@ export const AuthProvider = ({ children }) => {
     if (token && storedUser) {
       // Make a lightweight authenticated request to verify the token is still valid
       api.get('/yatra')
-        .then(() => {
-          // Token is valid — restore the session
-          setUser(JSON.parse(storedUser));
-        })
         .catch(() => {
           // Token is expired or invalid — clear the stale session
           localStorage.removeItem('token');
           localStorage.removeItem('user');
+          setUser(null);
         })
         .finally(() => {
           setLoading(false);

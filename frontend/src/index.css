@@ -372,3 +372,121 @@ p {
     rgba(0, 0, 0, 0.95) 100%
   );
 }
+
+/* Navbar menu toggle (shown on small screens only) */
+.navbar-toggle {
+  display: none;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 768px) {
+  /* Navbar: compact brand + collapsible menu */
+  .navbar {
+    padding: 10px 16px !important;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .navbar-brand {
+    gap: 12px !important;
+    min-width: 0;
+  }
+  .navbar-logo {
+    width: 48px !important;
+    height: 48px !important;
+  }
+  .navbar-logo > div {
+    font-size: 1.4rem !important;
+  }
+  .navbar-title {
+    font-size: 1.8rem !important;
+  }
+  .navbar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--accent-primary);
+    font-size: 1.4rem;
+    cursor: pointer;
+  }
+  .navbar-links {
+    display: none !important;
+    flex-basis: 100%;
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 0 !important;
+  }
+  .navbar-links.open {
+    display: flex !important;
+  }
+  .navbar-links > a,
+  .navbar-links > button {
+    padding: 14px 4px !important;
+    border-top: 1px solid var(--border-color) !important;
+    width: 100%;
+  }
+
+  /* Page containers */
+  main > .animate-fade-in {
+    padding: 16px !important;
+  }
+  h1 {
+    font-size: 1.6rem !important;
+  }
+  .glass-card {
+    padding: 16px;
+  }
+
+  /* Dashboard section cards */
+  .section-card-image {
+    height: 170px !important;
+  }
+  .section-card-body {
+    padding: 20px !important;
+  }
+
+  /* Yatra details header: stack image above the title */
+  .yatra-header,
+  .yatra-header-main {
+    flex-direction: column;
+  }
+  .yatra-header-main {
+    gap: 16px !important;
+    width: 100%;
+  }
+  .yatra-thumb {
+    width: 100% !important;
+    height: 200px !important;
+  }
+  .yatra-title {
+    font-size: 1.8rem !important;
+  }
+  .owner-bar > span {
+    flex-basis: 100% !important;
+  }
+  .owner-bar > button {
+    flex: 1;
+  }
+
+  /* Tables scroll sideways instead of squashing */
+  .table-scroll table {
+    min-width: 560px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Stat tiles stack into rows */
+  .stat-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+}

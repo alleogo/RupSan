@@ -345,13 +345,13 @@ const YatraDetails = () => {
   return (
     <>
       <div className="animate-fade-in" style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
-        <div style={{ display: 'flex', gap: '24px' }}>
+      <div className="yatra-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px', flexWrap: 'wrap', gap: '12px' }}>
+        <div className="yatra-header-main" style={{ display: 'flex', gap: '24px' }}>
           {yatra.thumbnail && (
-            <img src={getMediaUrl(yatra.thumbnail)} alt={yatra.title} style={{ width: '150px', height: '150px', objectFit: 'cover', borderRadius: '12px' }} />
+            <img src={getMediaUrl(yatra.thumbnail)} alt={yatra.title} className="yatra-thumb" style={{ width: '150px', height: '150px', objectFit: 'cover', borderRadius: '12px' }} />
           )}
           <div>
-            <h1 style={{ fontSize: '2.5rem', marginBottom: '8px' }}>{yatra.title}</h1>
+            <h1 className="yatra-title" style={{ fontSize: '2.5rem', marginBottom: '8px' }}>{yatra.title}</h1>
             <p style={{ color: 'var(--text-secondary)' }}>Destination: {yatra.destination} | Starts: {new Date(yatra.startDate).toLocaleDateString()} | Fee: ₹{yatra.registrationFee}</p>
             <p style={{ marginTop: '12px' }}>{yatra.description}</p>
           </div>
@@ -385,7 +385,7 @@ const YatraDetails = () => {
       {user?.role === 'Participant' && myRegDetails?.status === 'Approved' && (
         <div style={{ marginBottom: '24px', padding: '16px', background: 'rgba(99,102,241,0.07)', borderRadius: '12px', border: '1px solid rgba(99,102,241,0.2)' }}>
           <h3 style={{ marginBottom: '12px', fontSize: '1rem' }}>💳 My Payment Summary</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+          <div className="stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
             <div style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Total Amount</p>
               <p style={{ fontSize: '1.3rem', fontWeight: '700' }}>₹{myRegDetails.amountToBePaid || yatra.registrationFee}</p>
@@ -404,7 +404,7 @@ const YatraDetails = () => {
 
       {/* Edit / Delete Yatra buttons - only for the yatra's own manager or admin */}
       {isYatraOwner && (
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '28px', padding: '16px', background: 'rgba(99,102,241,0.06)', borderRadius: '12px', border: '1px solid rgba(99,102,241,0.2)', alignItems: 'center' }}>
+        <div className="owner-bar" style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '28px', padding: '16px', background: 'rgba(99,102,241,0.06)', borderRadius: '12px', border: '1px solid rgba(99,102,241,0.2)', alignItems: 'center' }}>
           <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', flex: 1 }}>You manage this Yatra</span>
           <Button
             variant="default"
@@ -452,11 +452,11 @@ const YatraDetails = () => {
           <Card>
             {activeTab === 'expenses' && (
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
                   <h2>Expenses</h2>
                   {(isYatraOwner || user?.role === 'Admin') && <Button style={{ width: 'auto' }} onClick={() => setExpenseModalOpen(true)}>+ Add Expense</Button>}
                 </div>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <div className="table-scroll"><table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--glass-border)' }}>
                       <th style={{ padding: '12px', color: 'var(--text-secondary)' }}>Name</th>
@@ -482,19 +482,19 @@ const YatraDetails = () => {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </table></div>
               </div>
             )}
 
             {activeTab === 'tickets' && (
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
                   <h2>Tickets</h2>
                   {(isYatraOwner || user?.role === 'Admin') && <Button style={{ width: 'auto' }} onClick={() => setTicketModalOpen(true)}>+ Add Ticket</Button>}
                 </div>
                 
                 {tickets.length > 0 ? (
-                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                  <div className="table-scroll"><table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--glass-border)' }}>
                         <th style={{ padding: '12px', color: 'var(--text-secondary)' }}>Name</th>
@@ -525,7 +525,7 @@ const YatraDetails = () => {
                         </tr>
                       ))}
                     </tbody>
-                  </table>
+                  </table></div>
                 ) : (
                   <p style={{ color: 'var(--text-secondary)' }}>No tickets added yet.</p>
                 )}
@@ -535,7 +535,7 @@ const YatraDetails = () => {
             {activeTab === 'registrationsLog' && (
               <div>
                 <h2 style={{ marginBottom: '16px' }}>Registrations Log</h2>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <div className="table-scroll"><table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--glass-border)' }}>
                       <th style={{ padding: '12px', color: 'var(--text-secondary)' }}>Participant</th>
@@ -566,7 +566,7 @@ const YatraDetails = () => {
                       </tr>
                     )})}
                   </tbody>
-                </table>
+                </table></div>
               </div>
             )}
 
@@ -574,7 +574,7 @@ const YatraDetails = () => {
               <div>
                 <h2 style={{ marginBottom: '16px' }}>Enrollment Requests</h2>
                 {requests.length > 0 ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 100%), 1fr))', gap: '20px' }}>
                     {requests.map(reg => (
                       <Card key={reg._id} style={{ padding: '16px' }}>
                         <p><strong>Participant:</strong> <span style={{ cursor: 'pointer', color: 'var(--accent-primary)', textDecoration: 'underline'}} onClick={() => { setSelectedUser(reg.user); setUserModalOpen(true); }}>{reg.user.firstName} {reg.user.lastName}</span></p>

@@ -129,7 +129,7 @@ const Dashboard = () => {
           </div>
         )}
         <div style={{ padding: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px', flexWrap: 'wrap', gap: '12px' }}>
             <h3 style={{ fontSize: '1.1rem', flex: 1 }}>{yatra.title}</h3>
             <span style={{ background: statusBg, color: statusColor, padding: '3px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '600', marginLeft: '8px', whiteSpace: 'nowrap' }}>
               {yatra.status}
@@ -172,7 +172,7 @@ const Dashboard = () => {
 
         {isManagerOrAdmin ? (
           <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '12px' }}>
               <div>
                 <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>Dashboard</h1>
                 <p>Welcome back, {user?.firstName}!</p>
@@ -180,25 +180,25 @@ const Dashboard = () => {
             </div>
 
             {/* Two big section cards side by side */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '32px', marginBottom: '40px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(420px, 100%), 1fr))', gap: '32px', marginBottom: '40px' }}>
 
               {/* === ACCOUNTS MANAGEMENT CARD === */}
               <div style={{ background: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--glass-border)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ width: '100%', height: '260px', background: 'linear-gradient(135deg,rgba(16,185,129,0.25),rgba(16,185,129,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div className="section-card-image" style={{ width: '100%', height: '260px', background: 'linear-gradient(135deg,rgba(16,185,129,0.25),rgba(16,185,129,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {settings?.accountsThumbnail ? (
                     <img src={getMediaUrl(settings.accountsThumbnail)} alt="Accounts" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
                     <span style={{ fontSize: '6rem' }}>💼</span>
                   )}
                 </div>
-                <div style={{ padding: '32px', flex: 1 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <div className="section-card-body" style={{ padding: '32px', flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
                     <h2 style={{ fontSize: '1.6rem' }}>Accounts Management</h2>
                     {user?.role === 'Admin' && (
                       <Button variant="default" style={{ padding: '6px 12px', fontSize: '0.8rem', width: 'auto' }} onClick={() => { setEditingThumbnailType('accounts'); setIsSettingsModalOpen(true); }}>Edit Image</Button>
                     )}
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '16px', marginBottom: '28px' }}>
+                  <div className="stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '16px', marginBottom: '28px' }}>
                     <div style={{ background: 'rgba(16,185,129,0.1)', borderLeft: '4px solid var(--accent-success)', padding: '16px', borderRadius: '8px' }}>
                       <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '4px' }}>Income</p>
                       <p style={{ fontSize: '1.4rem', fontWeight: '700', color: 'var(--accent-success)' }}>₹{ledgerSummary.totalIncome.toLocaleString()}</p>
@@ -220,15 +220,15 @@ const Dashboard = () => {
 
               {/* === YATRA MANAGEMENT CARD === */}
               <div style={{ background: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--glass-border)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ width: '100%', height: '260px', background: 'linear-gradient(135deg,rgba(99,102,241,0.25),rgba(99,102,241,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div className="section-card-image" style={{ width: '100%', height: '260px', background: 'linear-gradient(135deg,rgba(99,102,241,0.25),rgba(99,102,241,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {settings?.yatraThumbnail ? (
                     <img src={getMediaUrl(settings.yatraThumbnail)} alt="Yatra" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
                     <span style={{ fontSize: '6rem' }}>🛕</span>
                   )}
                 </div>
-                <div style={{ padding: '32px', flex: 1 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <div className="section-card-body" style={{ padding: '32px', flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
                     <h2 style={{ fontSize: '1.6rem' }}>Yatra Management</h2>
                     {user?.role === 'Admin' && (
                       <Button variant="default" style={{ padding: '6px 12px', fontSize: '0.8rem', width: 'auto' }} onClick={() => { setEditingThumbnailType('yatra'); setIsSettingsModalOpen(true); }}>Edit Image</Button>
@@ -269,7 +269,7 @@ const Dashboard = () => {
               {activeYatras.length === 0 ? (
                 <p style={{ color: 'var(--text-secondary)' }}>No active yatras at the moment.</p>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 100%), 1fr))', gap: '20px' }}>
                   {activeYatras.map(y => <YatraCard key={y._id} yatra={y} />)}
                 </div>
               )}
@@ -282,7 +282,7 @@ const Dashboard = () => {
         {user?.role === 'Admin' && unverifiedUsers.length > 0 && (
           <div style={{ marginTop: '40px' }}>
             <h2>Pending Participant Verifications</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px,1fr))', gap: '20px', marginTop: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(340px, 100%), 1fr))', gap: '20px', marginTop: '16px' }}>
               {unverifiedUsers.map(u => (
                 <Card key={u._id} style={{ borderLeft: '4px solid var(--accent-warning)' }}>
                   <h3 style={{ marginBottom: '8px' }}>{u.firstName} {u.lastName}</h3>
@@ -303,7 +303,7 @@ const Dashboard = () => {
         {user?.role === 'Admin' && pendingManagers.length > 0 && (
           <div style={{ marginTop: '40px' }}>
             <h2>Pending Manager Approvals</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px,1fr))', gap: '20px', marginTop: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(340px, 100%), 1fr))', gap: '20px', marginTop: '16px' }}>
               {pendingManagers.map(m => (
                 <Card key={m._id} style={{ borderLeft: '4px solid var(--accent-primary)' }}>
                   <h3 style={{ marginBottom: '8px' }}>{m.firstName} {m.lastName}</h3>
