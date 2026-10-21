@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import { Link } from 'react-router-dom';
-import { yatraApi, getMediaUrl } from '../utils/api';
+import { yatraApi, getImageUrl } from '../utils/api';
 import { YATRA_CARD_ASPECT_CSS } from '../components/ImageCropper';
 
 const PreviousYatras = () => {
@@ -28,7 +28,7 @@ const PreviousYatras = () => {
   const YatraCard = ({ yatra }) => (
     <Card style={{ padding: 0, overflow: 'hidden' }}>
       {yatra.thumbnail ? (
-        <img src={getMediaUrl(yatra.thumbnail)} alt={yatra.title}
+        <img src={getImageUrl(yatra.thumbnail, 800)} alt={yatra.title}
           style={{ width: '100%', aspectRatio: YATRA_CARD_ASPECT_CSS, objectFit: 'cover', display: 'block' }} />
       ) : (
         <div style={{ width: '100%', height: '100px', background: 'linear-gradient(135deg,rgba(212,175,55,0.18),rgba(16,185,129,0.12))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

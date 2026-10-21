@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
 import Button from '../components/Button';
-import { yatraApi, expenseApi, ticketApi, registrationApi, reviewApi, getMediaUrl } from '../utils/api';
+import { yatraApi, expenseApi, ticketApi, registrationApi, reviewApi, getMediaUrl, getImageUrl } from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
 import ImageCropper, { YATRA_CARD_ASPECT, YATRA_CARD_ASPECT_CSS } from '../components/ImageCropper';
 
@@ -347,7 +347,7 @@ const YatraDetails = () => {
       <div className="yatra-header" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 9fr) minmax(0, 11fr)', gap: '32px', alignItems: 'center', marginBottom: '32px' }}>
         <div style={{ width: '100%', aspectRatio: YATRA_CARD_ASPECT_CSS, borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--border-color)', background: 'linear-gradient(135deg,rgba(212,175,55,0.18),rgba(16,185,129,0.12))', boxShadow: 'var(--glass-shadow)' }}>
           {yatra.thumbnail && (
-            <img src={getMediaUrl(yatra.thumbnail)} alt={yatra.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            <img src={getImageUrl(yatra.thumbnail, 1000)} alt={yatra.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           )}
         </div>
 
@@ -594,7 +594,7 @@ const YatraDetails = () => {
                         {reg.paymentScreenshot && (
                           <div style={{ margin: '12px 0' }}>
                             <a href={getMediaUrl(reg.paymentScreenshot)} target="_blank" rel="noopener noreferrer" style={{ display: 'block' }}>
-                              <img src={getMediaUrl(reg.paymentScreenshot)} alt="Screenshot" style={{ width: '100%', borderRadius: '8px', cursor: 'pointer', border: '2px solid transparent', transition: 'border 0.2s' }} onMouseOver={e => e.target.style.border = '2px solid var(--accent-primary)'} onMouseOut={e => e.target.style.border = '2px solid transparent'} />
+                              <img src={getImageUrl(reg.paymentScreenshot, 600)} alt="Screenshot" style={{ width: '100%', borderRadius: '8px', cursor: 'pointer', border: '2px solid transparent', transition: 'border 0.2s' }} onMouseOver={e => e.target.style.border = '2px solid var(--accent-primary)'} onMouseOut={e => e.target.style.border = '2px solid transparent'} />
                               <p style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', marginTop: '4px', textAlign: 'center' }}>📎 Click to open full screenshot</p>
                             </a>
                           </div>

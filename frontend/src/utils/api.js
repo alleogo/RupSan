@@ -91,4 +91,13 @@ export const getMediaUrl = (path) => {
   return `${API_ORIGIN}${path}`;
 };
 
+// Optimised image URL for <img> tags: Cloudinary images get automatic format (WebP/AVIF) and quality,
+// and are capped at `width` pixels. Other URLs are returned unchanged. Use getMediaUrl for links to originals.
+export const getImageUrl = (path, width) => {
+  const url = getMediaUrl(path);
+  if (!url.includes('res.cloudinary.com/') || !url.includes('/image/upload/')) return url;
+  const transforms = ['f_auto', 'q_auto', ...(width ? [`w_${width}`, 'c_limit'] : [])].join(',');
+  return url.replace('/image/upload/', `/image/upload/${transforms}/`);
+};
+
 export default api;

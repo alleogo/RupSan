@@ -3,7 +3,7 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { yatraApi, transactionApi, authApi, registrationApi, userApi, settingsApi, getMediaUrl } from '../utils/api';
+import { yatraApi, transactionApi, authApi, registrationApi, userApi, settingsApi, getImageUrl } from '../utils/api';
 import ImageCropper, { YATRA_CARD_ASPECT, YATRA_CARD_ASPECT_CSS } from '../components/ImageCropper';
 
 const Dashboard = () => {
@@ -121,7 +121,7 @@ const Dashboard = () => {
     return (
       <Card style={{ padding: 0, overflow: 'hidden' }}>
         {yatra.thumbnail ? (
-          <img src={getMediaUrl(yatra.thumbnail)} alt={yatra.title}
+          <img src={getImageUrl(yatra.thumbnail, 800)} alt={yatra.title}
             style={{ width: '100%', aspectRatio: YATRA_CARD_ASPECT_CSS, objectFit: 'cover', display: 'block' }} />
         ) : (
           <div style={{ width: '100%', height: '100px', background: 'linear-gradient(135deg,rgba(212,175,55,0.18),rgba(16,185,129,0.12))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -185,7 +185,7 @@ const Dashboard = () => {
               <div style={{ background: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--glass-border)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                 <div className="section-card-image" style={{ width: '100%', aspectRatio: YATRA_CARD_ASPECT_CSS, minHeight: 0, overflow: 'hidden', background: 'linear-gradient(135deg,rgba(16,185,129,0.25),rgba(16,185,129,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {settings?.accountsThumbnail ? (
-                    <img src={getMediaUrl(settings.accountsThumbnail)} alt="Accounts" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={getImageUrl(settings.accountsThumbnail, 1200)} alt="Accounts" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : null}
                 </div>
                 <div className="section-card-body" style={{ padding: '32px', flex: 1 }}>
@@ -219,7 +219,7 @@ const Dashboard = () => {
               <div style={{ background: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--glass-border)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                 <div className="section-card-image" style={{ width: '100%', aspectRatio: YATRA_CARD_ASPECT_CSS, minHeight: 0, overflow: 'hidden', background: 'linear-gradient(135deg,rgba(99,102,241,0.25),rgba(99,102,241,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {settings?.yatraThumbnail ? (
-                    <img src={getMediaUrl(settings.yatraThumbnail)} alt="Yatra" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={getImageUrl(settings.yatraThumbnail, 1200)} alt="Yatra" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : null}
                 </div>
                 <div className="section-card-body" style={{ padding: '32px', flex: 1 }}>

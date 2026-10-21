@@ -10,7 +10,7 @@ const BackgroundDesign = () => {
       <div className="luxury-bg auth-bg">
         <div
           className="auth-bg-image"
-          style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/auth-bg.png)` }}
+          style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/auth-bg.webp)` }}
         ></div>
         <div className="auth-bg-overlay"></div>
       </div>
@@ -22,7 +22,7 @@ const BackgroundDesign = () => {
       <div className="luxury-bg profile-bg">
         <div
           className="profile-bg-image"
-          style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/profile-bg.png)` }}
+          style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/profile-bg.webp)` }}
         ></div>
         <div className="profile-bg-overlay"></div>
       </div>
@@ -34,7 +34,7 @@ const BackgroundDesign = () => {
       <div className="luxury-bg yatra-bg">
         <div
           className="yatra-bg-image"
-          style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/profile-bg.png)` }}
+          style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/profile-bg.webp)` }}
         ></div>
         <div className="yatra-bg-overlay"></div>
       </div>
@@ -46,7 +46,7 @@ const BackgroundDesign = () => {
       <div className="luxury-bg dashboard-bg">
         <div
           className="dash-bg-image"
-          style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/dash-bg.png)` }}
+          style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/dash-bg.webp)` }}
         ></div>
         <div className="dash-bg-overlay"></div>
       </div>
@@ -58,7 +58,7 @@ const BackgroundDesign = () => {
     <div className="luxury-bg dashboard-bg">
       <div
         className="dash-bg-image"
-        style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/dash-bg.png)` }}
+        style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/dash-bg.webp)` }}
       ></div>
       <div className="dash-bg-overlay"></div>
     </div>

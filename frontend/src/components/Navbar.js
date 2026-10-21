@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FiLayout, FiUser, FiLogOut, FiMenu, FiX } from 'react-icons/fi';
 import { AuthContext } from '../context/AuthContext';
-import { settingsApi, getMediaUrl } from '../utils/api';
+import { settingsApi, getImageUrl } from '../utils/api';
 
 // Built-in branding shown before settings load; keep in sync with the saved settings to avoid a flash
 const DEFAULT_BRANDING = {
@@ -70,7 +70,7 @@ const Navbar = () => {
       <div className="navbar-brand" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
         <div className="navbar-logo" style={{ display: 'block', width: '80px', height: '80px', flexShrink: 0, filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.5))' }}>
           {settings?.navbarLogo ? (
-            <img src={getMediaUrl(settings.navbarLogo)} alt="Logo" style={{
+            <img src={getImageUrl(settings.navbarLogo, 160)} alt="Logo" style={{
               width: '100%', height: '100%', borderRadius: '12px', objectFit: 'cover'
             }} />
           ) : (

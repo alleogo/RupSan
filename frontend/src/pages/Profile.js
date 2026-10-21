@@ -3,7 +3,7 @@ import { AuthContext } from '../context/AuthContext';
 import Card from '../components/Card';
 import Input from '../components/Input';
 import Button from '../components/Button';
-import api, { settingsApi, getMediaUrl } from '../utils/api';
+import api, { settingsApi, getImageUrl } from '../utils/api';
 import ImageCropper from '../components/ImageCropper';
 
 const Profile = () => {
@@ -221,7 +221,7 @@ const Profile = () => {
             <h4 style={{ marginBottom: '12px' }}>Logo Image</h4>
             {settings?.navbarLogo ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px' }}>
-                <img src={getMediaUrl(settings.navbarLogo)} alt="Logo" style={{ width: '60px', height: '60px', borderRadius: '8px', objectFit: 'cover' }} />
+                <img src={getImageUrl(settings.navbarLogo, 160)} alt="Logo" style={{ width: '60px', height: '60px', borderRadius: '8px', objectFit: 'cover' }} />
                 <span style={{ color: 'var(--accent-success)', fontSize: '0.9rem' }}>✅ Logo is set</span>
               </div>
             ) : (
