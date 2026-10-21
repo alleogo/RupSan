@@ -15,6 +15,12 @@ exports.connect = async () => {
         }
     }
 
+    // No local DB fallback on Vercel; don't kill the serverless function
+    if (process.env.VERCEL) {
+        console.error("DB connection failed: MONGODB_URL is missing or unreachable");
+        return;
+    }
+
     try {
         await mongoose.connect(fallbackUrl);
         console.log("DB connected successfully to local database!");

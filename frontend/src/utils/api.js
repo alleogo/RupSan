@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+// In production the backend is served from the same domain under /api (see vercel.json);
+// in local dev it runs on port 4000. REACT_APP_API_URL overrides both.
+const API_ORIGIN = (process.env.REACT_APP_API_URL ?? (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:4000')).replace(/\/$/, '');
+
 const api = axios.create({
-  baseURL: 'http://localhost:4000/api/v1', // Assuming backend runs on 4000
+  baseURL: `${API_ORIGIN}/api/v1`,
 });
 
 // Add a request interceptor to attach the JWT token
@@ -84,7 +88,7 @@ export const reviewApi = {
 export const getMediaUrl = (path) => {
   if (!path) return '';
   if (path.startsWith('http')) return path;
-  return `http://localhost:4000${path}`;
+  return `${API_ORIGIN}${path}`;
 };
 
 export default api;

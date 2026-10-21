@@ -3,8 +3,8 @@ const Yatra = require('../models/Yatra');
 const YatraRegistration = require('../models/YatraRegistration');
 const mailSender = require('./mailSender');
 
-// Run every day at 8:00 AM
-cron.schedule('0 8 * * *', async () => {
+// Daily job: mark ended yatras as Completed and ask attendees for reviews
+const runYatraReviewJob = async () => {
     try {
         const startTime = new Date();
         console.log(`[Cron Job] Daily Yatra review job started at ${startTime.toISOString()}`);
@@ -50,4 +50,12 @@ cron.schedule('0 8 * * *', async () => {
     } catch (error) {
         console.error(`[Cron Job] Error in daily Yatra review job:`, error);
     }
-});
+};
+
+// On Vercel the job is triggered by Vercel Cron (see vercel.json); locally use node-cron
+if (!process.env.VERCEL) {
+    // Run every day at 8:00 AM
+    cron.schedule('0 8 * * *', runYatraReviewJob);
+}
+
+module.exports = { runYatraReviewJob };
