@@ -52,7 +52,6 @@ exports.sendOTP = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: "OTP sent successfully",
-            otp,
         });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
@@ -97,6 +96,21 @@ exports.register = async (req, res) => {
             password: hashedPassword,
             role,
         });
+
+        // Notify all admins that a new manager account is waiting for approval
+        if (user.role === "Manager") {
+            const admins = await User.find({ role: "Admin" }).select("email firstName");
+            const siteUrl = req.headers.origin || `${req.protocol}://${req.get("host")}`;
+            await Promise.all(admins.map(admin => mailSender(
+                admin.email,
+                `Manager Approval Request: ${user.firstName} ${user.lastName}`,
+                `<p>Dear ${admin.firstName},</p>
+                 <p><b>${user.firstName} ${user.lastName}</b> (${user.email}) has signed up as a Manager and is waiting for your approval.</p>
+                 <p>Please <a href="${siteUrl}/">log in to the dashboard</a> to approve or reject this request.</p>
+                 <p>Thank you!</p>`
+            )));
+            console.log(`[register] Sent manager approval request for ${user.email} to ${admins.length} admin(s)`);
+        }
 
         // Don't send password in response
         user.password = undefined;

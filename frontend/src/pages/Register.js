@@ -19,6 +19,7 @@ const Register = () => {
     lastName: '',
     email: '',
     password: '',
+    confirmPassword: '',
     role: 'Participant',
     adminSecret: '',
     otp: ''
@@ -32,6 +33,12 @@ const Register = () => {
     e.preventDefault();
     setError('');
     setSuccessMsg('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
     setLoading(true);
 
     if (!otpSent) {
@@ -45,7 +52,8 @@ const Register = () => {
         setError(err.response?.data?.message || 'Failed to send OTP');
       }
     } else {
-      const result = await register(formData);
+      const { confirmPassword, ...userData } = formData;
+      const result = await register(userData);
       if (result.success) {
         setSuccessMsg(result.message + ' Redirecting to login...');
         setTimeout(() => navigate('/login'), 2000);
@@ -76,6 +84,7 @@ const Register = () => {
             
             <Input label="Email Address" type="email" name="email" value={formData.email} onChange={handleChange} placeholder="you@example.com" required />
             <Input label="Password" type="password" name="password" value={formData.password} onChange={handleChange} placeholder="••••••••" required />
+            <Input label="Re-enter Password" type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="••••••••" required />
             
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Role</label>
