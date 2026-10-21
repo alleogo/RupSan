@@ -1,7 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Button from './Button';
 
-const ImageCropper = ({ imageSrc, onCrop, onCancel }) => {
+// Shape of the yatra card thumbnail; the yatra thumbnail cropper uses the same shape so the crop matches the card
+export const YATRA_CARD_ASPECT = { w: 5, h: 2 };
+export const YATRA_CARD_ASPECT_CSS = `${YATRA_CARD_ASPECT.w} / ${YATRA_CARD_ASPECT.h}`;
+
+const ImageCropper = ({ imageSrc, onCrop, onCancel, aspect = { w: 4, h: 3 } }) => {
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -51,7 +55,7 @@ const ImageCropper = ({ imageSrc, onCrop, onCancel }) => {
     const ctx = canvas.getContext('2d');
     
     canvas.width = 1200;
-    canvas.height = 900;
+    canvas.height = Math.round(1200 * aspect.h / aspect.w);
 
     const img = imgRef.current;
     const container = containerRef.current;
@@ -59,7 +63,7 @@ const ImageCropper = ({ imageSrc, onCrop, onCancel }) => {
     if (!img || !container) return;
 
     const rect = container.getBoundingClientRect();
-    const scaleFactor = 1280 / rect.width;
+    const scaleFactor = canvas.width / rect.width;
 
     const destWidth = img.clientWidth * zoom * scaleFactor;
     const destHeight = img.clientHeight * zoom * scaleFactor;
@@ -79,14 +83,14 @@ const ImageCropper = ({ imageSrc, onCrop, onCancel }) => {
 
   return (
     <div style={{ padding: '16px', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}>
-      <h3 style={{ marginBottom: '12px', fontSize: '1.2rem' }}>Adjust Thumbnail (4:3 Ratio)</h3>
+      <h3 style={{ marginBottom: '12px', fontSize: '1.2rem' }}>Adjust Thumbnail ({aspect.w}:{aspect.h} Ratio)</h3>
       <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>Drag to position the image inside the frame, then adjust the zoom slider.</p>
       
       <div 
         ref={containerRef}
         style={{ 
           width: '100%', 
-          aspectRatio: '4/3', 
+          aspectRatio: `${aspect.w}/${aspect.h}`, 
           position: 'relative', 
           overflow: 'hidden', 
           background: '#000', 

@@ -4,7 +4,7 @@ import Button from '../components/Button';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { yatraApi, getMediaUrl } from '../utils/api';
-import ImageCropper from '../components/ImageCropper';
+import ImageCropper, { YATRA_CARD_ASPECT, YATRA_CARD_ASPECT_CSS } from '../components/ImageCropper';
 
 const YatraManagement = () => {
   const [yatras, setYatras] = useState([]);
@@ -91,7 +91,7 @@ const YatraManagement = () => {
       <Card style={{ padding: 0, overflow: 'hidden' }}>
         {yatra.thumbnail ? (
           <img src={getMediaUrl(yatra.thumbnail)} alt={yatra.title}
-            style={{ width: '100%', height: '150px', objectFit: 'cover', display: 'block' }} />
+            style={{ width: '100%', aspectRatio: YATRA_CARD_ASPECT_CSS, objectFit: 'cover', display: 'block' }} />
         ) : (
           <div style={{ width: '100%', height: '100px', background: 'linear-gradient(135deg,rgba(99,102,241,0.25),rgba(16,185,129,0.15))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ fontSize: '2.5rem' }}>🛕</span>
@@ -209,6 +209,7 @@ const YatraManagement = () => {
                 <div style={{ marginBottom: '12px', background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '8px' }}>
                   <p style={{ fontSize: '0.85rem', marginBottom: '8px', color: 'var(--text-secondary)' }}>Crop your thumbnail image:</p>
                   <ImageCropper
+                    aspect={YATRA_CARD_ASPECT}
                     imageSrc={cropperImageSrc}
                     onCrop={(blob) => {
                       setNewYatra({...newYatra, thumbnail: blob});

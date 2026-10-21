@@ -4,7 +4,7 @@ import Button from '../components/Button';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { yatraApi, transactionApi, authApi, registrationApi, userApi, settingsApi, getMediaUrl } from '../utils/api';
-import ImageCropper from '../components/ImageCropper';
+import ImageCropper, { YATRA_CARD_ASPECT_CSS } from '../components/ImageCropper';
 
 const Dashboard = () => {
   const [ledgerSummary, setLedgerSummary] = useState({ totalIncome: 0, totalExpense: 0, balance: 0 });
@@ -122,7 +122,7 @@ const Dashboard = () => {
       <Card style={{ padding: 0, overflow: 'hidden' }}>
         {yatra.thumbnail ? (
           <img src={getMediaUrl(yatra.thumbnail)} alt={yatra.title}
-            style={{ width: '100%', height: '150px', objectFit: 'cover', display: 'block' }} />
+            style={{ width: '100%', aspectRatio: YATRA_CARD_ASPECT_CSS, objectFit: 'cover', display: 'block' }} />
         ) : (
           <div style={{ width: '100%', height: '100px', background: 'linear-gradient(135deg,rgba(99,102,241,0.25),rgba(16,185,129,0.15))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ fontSize: '2.5rem' }}>🛕</span>

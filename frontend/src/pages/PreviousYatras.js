@@ -3,6 +3,7 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import { Link } from 'react-router-dom';
 import { yatraApi, getMediaUrl } from '../utils/api';
+import { YATRA_CARD_ASPECT_CSS } from '../components/ImageCropper';
 
 const PreviousYatras = () => {
   const [pastYatras, setPastYatras] = useState([]);
@@ -28,7 +29,7 @@ const PreviousYatras = () => {
     <Card style={{ padding: 0, overflow: 'hidden' }}>
       {yatra.thumbnail ? (
         <img src={getMediaUrl(yatra.thumbnail)} alt={yatra.title}
-          style={{ width: '100%', height: '150px', objectFit: 'cover', display: 'block' }} />
+          style={{ width: '100%', aspectRatio: YATRA_CARD_ASPECT_CSS, objectFit: 'cover', display: 'block' }} />
       ) : (
         <div style={{ width: '100%', height: '100px', background: 'linear-gradient(135deg,rgba(99,102,241,0.25),rgba(16,185,129,0.15))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <span style={{ fontSize: '2.5rem' }}>🛕</span>

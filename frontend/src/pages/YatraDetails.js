@@ -4,7 +4,7 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import { yatraApi, expenseApi, ticketApi, registrationApi, reviewApi, getMediaUrl } from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
-import ImageCropper from '../components/ImageCropper';
+import ImageCropper, { YATRA_CARD_ASPECT } from '../components/ImageCropper';
 
 const YatraDetails = () => {
   const { id } = useParams();
@@ -950,6 +950,7 @@ const YatraDetails = () => {
                 <div style={{ marginBottom: '12px', background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '8px' }}>
                   <p style={{ fontSize: '0.85rem', marginBottom: '8px', color: 'var(--text-secondary)' }}>Crop your thumbnail image:</p>
                   <ImageCropper
+                    aspect={YATRA_CARD_ASPECT}
                     imageSrc={cropperImageSrc}
                     onCrop={(blob) => {
                       setEditYatraData({...editYatraData, newThumbnail: blob});
