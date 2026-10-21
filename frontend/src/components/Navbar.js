@@ -5,7 +5,15 @@ import { AuthContext } from '../context/AuthContext';
 import { settingsApi, getMediaUrl } from '../utils/api';
 
 const Navbar = () => {
-  const [settings, setSettings] = useState(null);
+  // Start from the last-seen settings so the branding doesn't flash the defaults on load
+  const [settings, setSettings] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('navbarSettings'));
+    } catch {
+      return null;
+    }
+  });
+  const [settingsLoaded, setSettingsLoaded] = useState(() => settings !== null);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -13,9 +21,14 @@ const Navbar = () => {
         const res = await settingsApi.get();
         if (res.data.success) {
           setSettings(res.data.settings);
+          try {
+            localStorage.setItem('navbarSettings', JSON.stringify(res.data.settings));
+          } catch {}
         }
       } catch (error) {
         console.error("Failed to fetch settings", error);
+      } finally {
+        setSettingsLoaded(true);
       }
     };
     fetchSettings();
@@ -46,7 +59,7 @@ const Navbar = () => {
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
         <div style={{ display: 'block', width: '80px', height: '80px', flexShrink: 0, filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.5))' }}>
-          {settings?.navbarLogo ? (
+          {!settingsLoaded ? null : settings?.navbarLogo ? (
             <img src={getMediaUrl(settings.navbarLogo)} alt="Logo" style={{
               width: '100%', height: '100%', borderRadius: '12px', objectFit: 'cover'
             }} />
@@ -84,7 +97,7 @@ const Navbar = () => {
             paddingBottom: '4px',
             filter: 'drop-shadow(2px 3px 3px rgba(0,0,0,0.7)) drop-shadow(0 0 15px rgba(255,215,0,0.25))'
           }}>
-            {settings?.navbarTitle || 'Accounts Management'}
+            {settingsLoaded && (settings?.navbarTitle || 'Accounts Management')}
           </h2>
         </div>
       </div>
