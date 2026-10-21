@@ -6,6 +6,9 @@ const mailSender = require("../utils/mailSender");
 
 // Registration Controller - Manages Yatra registration and participant approval
 
+// Only the manager who created a yatra (or an admin) may handle its enrollment requests
+const canManageYatra = (user, yatra) => user.role === "Admin" || yatra.createdBy?.toString() === user.id?.toString();
+
 exports.registerForYatra = async (req, res) => {
     try {
         const { yatraId, paymentRefId } = req.body;
@@ -81,6 +84,14 @@ exports.updateRegistrationDetails = async (req, res) => {
         const { amountToBePaid, paidOnline, paidCash, firstName, lastName } = req.body;
         console.log(`[updateRegistrationDetails] Updating registration: ${registrationId}, Amount: ${amountToBePaid}`);
 
+        const existing = await YatraRegistration.findById(registrationId).populate("yatra", "createdBy");
+        if (!existing) {
+            return res.status(404).json({ success: false, message: "Registration not found" });
+        }
+        if (!existing.yatra || !canManageYatra(req.user, existing.yatra)) {
+            return res.status(403).json({ success: false, message: "Only this Yatra's manager can update its registrations" });
+        }
+
         const registration = await YatraRegistration.findByIdAndUpdate(
             registrationId, 
             { amountToBePaid, paidOnline, paidCash }, 
@@ -116,6 +127,15 @@ exports.getYatraRegistrations = async (req, res) => {
         const { yatraId } = req.params;
         const { status } = req.query; // 'Pending' or 'Approved'
         console.log(`[getYatraRegistrations] Fetching registrations for Yatra: ${yatraId}, Status filter: ${status || 'All'}`);
+
+        const yatra = await Yatra.findById(yatraId).select("createdBy");
+        if (!yatra) {
+            return res.status(404).json({ success: false, message: "Yatra not found" });
+        }
+        // Other managers may see the approved registrations log, but not enrollment requests
+        if (status !== "Approved" && !canManageYatra(req.user, yatra)) {
+            return res.status(403).json({ success: false, message: "Only this Yatra's manager can view its enrollment requests" });
+        }
         
         let query = { yatra: yatraId };
         if (status) {
@@ -160,6 +180,9 @@ exports.approveRegistration = async (req, res) => {
         const registration = await YatraRegistration.findById(registrationId).populate("user").populate("yatra");
         if (!registration) {
             return res.status(404).json({ success: false, message: "Registration not found" });
+        }
+        if (!registration.yatra || !canManageYatra(req.user, registration.yatra)) {
+            return res.status(403).json({ success: false, message: "Only this Yatra's manager can approve or reject its enrollments" });
         }
 
         registration.status = action === 'Approve' ? 'Approved' : 'Rejected';

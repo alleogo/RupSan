@@ -82,19 +82,24 @@ const YatraDetails = () => {
         }
 
         const isManagerOrAdmin = user?.role === 'Admin' || user?.role === 'Manager';
+        const fetchedYatra = yatraRes.data.yatra;
+        const currentUserId = user?._id || user?.id;
+        // Only the yatra's own manager (or an admin) can see its enrollment requests
+        const canSeeRequests = user?.role === 'Admin' ||
+          (fetchedYatra?.createdBy?._id || fetchedYatra?.createdBy)?.toString() === currentUserId?.toString();
         
         if (isManagerOrAdmin) {
           const [expRes, tickRes, logRes, reqRes] = await Promise.all([
             expenseApi.getAll(id),
             ticketApi.getAll(id),
             registrationApi.getAll(id, { status: 'Approved' }),
-            registrationApi.getAll(id, { status: 'Pending' })
+            canSeeRequests ? registrationApi.getAll(id, { status: 'Pending' }) : null
           ]);
 
           if (expRes.data.success) setExpenses(expRes.data.expenses);
           if (tickRes.data.success) setTickets(tickRes.data.tickets);
           if (logRes.data.success) setRegistrationsLog(logRes.data.registrations);
-          if (reqRes.data.success) setRequests(reqRes.data.registrations);
+          if (reqRes?.data.success) setRequests(reqRes.data.registrations);
         }
       } catch (error) {
         console.error("Failed to fetch yatra details:", error);
@@ -438,7 +443,9 @@ const YatraDetails = () => {
             <Button variant={activeTab === 'expenses' ? 'primary' : 'default'} onClick={() => setActiveTab('expenses')} style={{ width: 'auto' }}>Expenses</Button>
             <Button variant={activeTab === 'tickets' ? 'primary' : 'default'} onClick={() => setActiveTab('tickets')} style={{ width: 'auto' }}>Tickets</Button>
             <Button variant={activeTab === 'registrationsLog' ? 'primary' : 'default'} onClick={() => setActiveTab('registrationsLog')} style={{ width: 'auto' }}>Registrations Log</Button>
-            <Button variant={activeTab === 'requests' ? 'primary' : 'default'} onClick={() => setActiveTab('requests')} style={{ width: 'auto' }}>Requests</Button>
+            {(isYatraOwner || user?.role === 'Admin') && (
+              <Button variant={activeTab === 'requests' ? 'primary' : 'default'} onClick={() => setActiveTab('requests')} style={{ width: 'auto' }}>Requests</Button>
+            )}
             <Button variant={activeTab === 'reviews' ? 'primary' : 'default'} onClick={() => setActiveTab('reviews')} style={{ width: 'auto' }}>Reviews</Button>
           </div>
 
@@ -563,7 +570,7 @@ const YatraDetails = () => {
               </div>
             )}
 
-            {activeTab === 'requests' && (
+            {activeTab === 'requests' && (isYatraOwner || user?.role === 'Admin') && (
               <div>
                 <h2 style={{ marginBottom: '16px' }}>Enrollment Requests</h2>
                 {requests.length > 0 ? (
