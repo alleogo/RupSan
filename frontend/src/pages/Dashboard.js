@@ -186,9 +186,7 @@ const Dashboard = () => {
                 <div className="section-card-image" style={{ width: '100%', height: '260px', background: 'linear-gradient(135deg,rgba(16,185,129,0.25),rgba(16,185,129,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {settings?.accountsThumbnail ? (
                     <img src={getMediaUrl(settings.accountsThumbnail)} alt="Accounts" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    <span style={{ fontSize: '6rem' }}>💼</span>
-                  )}
+                  ) : null}
                 </div>
                 <div className="section-card-body" style={{ padding: '32px', flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
