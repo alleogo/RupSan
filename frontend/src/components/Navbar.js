@@ -133,6 +133,11 @@ const Navbar = () => {
             💰 Ledger
           </Link>
         )}
+        {user?.role === 'Admin' && (
+          <Link to="/users" style={{ color: isActive('/users'), textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '500', transition: 'var(--transition-fast)' }}>
+            👥 Users
+          </Link>
+        )}
         {user ? (
           <>
             <Link to="/profile" style={{ color: isActive('/profile'), textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '500' }}>

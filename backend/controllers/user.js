@@ -101,3 +101,56 @@ exports.verifyUser = async (req, res) => {
         return res.status(500).json({ success: false, message: error.message });
     }
 };
+
+// Get All Users with search, filters and pagination (Admin only)
+exports.getAllUsers = async (req, res) => {
+    try {
+        const { search, role, status, verificationStatus, page = 1, limit = 20 } = req.query;
+
+        const filter = {};
+        if (role) filter.role = role;
+        if (status) filter.status = status;
+        if (verificationStatus) filter.verificationStatus = verificationStatus;
+
+        if (search && search.trim()) {
+            // Escape regex special characters so the search is treated as plain text
+            const escaped = search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            const regex = new RegExp(escaped, "i");
+            filter.$or = [
+                { firstName: regex },
+                { lastName: regex },
+                { email: regex },
+                { phoneNumber: regex },
+                { centre: regex },
+                { aadharNumber: regex },
+                // Full name, e.g. "Hari Das"
+                { $expr: { $regexMatch: { input: { $concat: ["$firstName", " ", "$lastName"] }, regex: escaped, options: "i" } } }
+            ];
+        }
+
+        const pageNum = Math.max(1, parseInt(page) || 1);
+        const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 20));
+
+        const [users, total, roleCounts] = await Promise.all([
+            User.find(filter)
+                .select("-password")
+                .sort({ createdAt: -1, _id: -1 })
+                .skip((pageNum - 1) * limitNum)
+                .limit(limitNum),
+            User.countDocuments(filter),
+            User.aggregate([{ $group: { _id: "$role", count: { $sum: 1 } } }])
+        ]);
+
+        const counts = { Admin: 0, Manager: 0, Participant: 0 };
+        roleCounts.forEach(r => { counts[r._id] = r.count; });
+
+        return res.status(200).json({
+            success: true,
+            users,
+            pagination: { total, page: pageNum, limit: limitNum, totalPages: Math.max(1, Math.ceil(total / limitNum)) },
+            counts
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};

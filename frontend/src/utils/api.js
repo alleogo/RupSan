@@ -68,6 +68,7 @@ export const registrationApi = {
 };
 
 export const userApi = {
+  getAll: (params) => api.get('/user/all', { params }),
   getUnverified: () => api.get('/user/unverified'),
   verify: (id, action) => api.put(`/user/verify/${id}`, { action })
 };

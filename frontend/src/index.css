@@ -480,6 +480,46 @@ p {
   .table-scroll table {
     min-width: 560px;
   }
+
+  /* Stacked tables: each row becomes a card with labelled fields */
+  .table-scroll table.stack-table {
+    min-width: 0;
+  }
+  .stack-table thead {
+    display: none;
+  }
+  .stack-table,
+  .stack-table tbody,
+  .stack-table tr {
+    display: block;
+    width: 100%;
+  }
+  .stack-table tr {
+    padding: 12px 0;
+  }
+  .stack-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 4px 0 !important;
+    text-align: right;
+  }
+  .stack-table td::before {
+    content: attr(data-label);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    text-align: left;
+    flex-shrink: 0;
+  }
+  .stack-table td.stack-title {
+    font-size: 1.05rem;
+    text-align: left;
+    padding-bottom: 8px !important;
+  }
+  .stack-table td.stack-title::before {
+    content: none;
+  }
 }
 
 @media (max-width: 480px) {
