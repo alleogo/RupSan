@@ -373,6 +373,24 @@ p {
   );
 }
 
+/* Visually hidden, still read by screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.breakdown-row:hover > div:last-child,
+.breakdown-row:focus-visible > div:last-child {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
 /* Navbar menu toggle (shown on small screens only) */
 .navbar-toggle {
   display: none;
@@ -490,12 +508,16 @@ p {
   }
   .stack-table,
   .stack-table tbody,
+  .stack-table tfoot,
   .stack-table tr {
     display: block;
     width: 100%;
   }
   .stack-table tr {
     padding: 12px 0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
   }
   .stack-table td {
     display: flex;
@@ -513,12 +535,56 @@ p {
     flex-shrink: 0;
   }
   .stack-table td.stack-title {
+    display: block;
+    order: -1;
     font-size: 1.05rem;
     text-align: left;
     padding-bottom: 8px !important;
   }
+  /* Row checkbox sits in the card's top-right corner, beside the title */
+  .stack-table td[data-label="Select"] {
+    position: absolute;
+    top: 12px;
+    right: 0;
+    padding: 0 !important;
+  }
+  .stack-table td[data-label="Select"]::before {
+    content: none;
+  }
+  .stack-table tr:has(td[data-label="Select"]) td.stack-title {
+    padding-right: 32px !important;
+  }
+
+  /* Ledger totals: two per row on phones */
+  .ledger-stats {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+  .ledger-stats .glass-card {
+    padding: 14px !important;
+  }
+  .ledger-stats .glass-card p:nth-child(2) {
+    font-size: 1.2rem !important;
+  }
   .stack-table td.stack-title::before {
     content: none;
+  }
+  .stack-table td[data-label=""]::before {
+    content: none;
+  }
+  .stack-table td[data-label=""]:not(.stack-title) {
+    justify-content: flex-end;
+  }
+
+  /* Ledger: selection maths bar sits flush with the screen edges */
+  .selection-bar {
+    bottom: 8px !important;
+    padding: 10px 14px !important;
+  }
+  .selection-stats {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 12px !important;
   }
 }
 

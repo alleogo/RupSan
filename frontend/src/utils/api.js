@@ -45,10 +45,14 @@ export const expenseApi = {
 export const transactionApi = {
   getSummary: (params) => api.get('/transaction/summary', { params }),
   getAll: (params) => api.get('/transaction', { params }),
-  add: (data) => api.post('/transaction/add', data),
-  update: (id, data) => api.put(`/transaction/${id}`, data),
+  add: (data) => api.post('/transaction/add', data), // data can be FormData (payment proof)
+  update: (id, data) => api.put(`/transaction/${id}`, data), // data can be FormData (payment proof)
   delete: (id) => api.delete(`/transaction/${id}`),
-  getCategories: () => api.get('/transaction/categories')
+  bulkDelete: (ids) => api.post('/transaction/bulk-delete', { ids }),
+  getCategories: () => api.get('/transaction/categories'),
+  getMonthly: (params) => api.get('/transaction/monthly', { params }),
+  getBreakdown: (params) => api.get('/transaction/breakdown', { params }),
+  exportCsv: (params) => api.get('/transaction/export', { params, responseType: 'blob' })
 };
 
 export const ticketApi = {
