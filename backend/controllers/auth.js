@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const otpGenerator = require("otp-generator");
 const mailSender = require("../utils/mailSender");
+const { escapeHtml, getSiteUrl, notifyAdmins } = require("../utils/notify");
 require("dotenv").config();
 
 // Auth Controller - Handles user authentication and registration
@@ -99,17 +100,15 @@ exports.register = async (req, res) => {
 
         // Notify all admins that a new manager account is waiting for approval
         if (user.role === "Manager") {
-            const admins = await User.find({ role: "Admin" }).select("email firstName");
-            const siteUrl = req.headers.origin || `${req.protocol}://${req.get("host")}`;
-            await Promise.all(admins.map(admin => mailSender(
-                admin.email,
+            const siteUrl = getSiteUrl(req);
+            const adminCount = await notifyAdmins(
                 `Manager Approval Request: ${user.firstName} ${user.lastName}`,
-                `<p>Dear ${admin.firstName},</p>
-                 <p><b>${user.firstName} ${user.lastName}</b> (${user.email}) has signed up as a Manager and is waiting for your approval.</p>
+                (admin) => `<p>Dear ${escapeHtml(admin.firstName)},</p>
+                 <p><b>${escapeHtml(user.firstName)} ${escapeHtml(user.lastName)}</b> (${escapeHtml(user.email)}) has signed up as a Manager and is waiting for your approval.</p>
                  <p>Please <a href="${siteUrl}/">log in to the dashboard</a> to approve or reject this request.</p>
                  <p>Thank you!</p>`
-            )));
-            console.log(`[register] Sent manager approval request for ${user.email} to ${admins.length} admin(s)`);
+            );
+            console.log(`[register] Sent manager approval request for ${user.email} to ${adminCount} admin(s)`);
         }
 
         // Don't send password in response

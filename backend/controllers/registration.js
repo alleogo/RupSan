@@ -3,6 +3,7 @@ const Yatra = require("../models/Yatra");
 const User = require("../models/User");
 const uploadImageToCloudinary = require("../utils/cloudinaryUploader");
 const mailSender = require("../utils/mailSender");
+const { escapeHtml, getSiteUrl } = require("../utils/notify");
 
 // Registration Controller - Manages Yatra registration and participant approval
 
@@ -55,13 +56,13 @@ exports.registerForYatra = async (req, res) => {
         // Notify the manager who created the yatra of the new enrollment request
         const manager = await User.findById(yatra.createdBy).select("email firstName");
         if (manager) {
-            const siteUrl = req.headers.origin || `${req.protocol}://${req.get("host")}`;
+            const siteUrl = getSiteUrl(req);
             await mailSender(
                 manager.email,
                 `Yatra Enrollment Request: ${yatra.title}`,
-                `<p>Dear ${manager.firstName},</p>
-                 <p><b>${user.firstName} ${user.lastName}</b> (${user.email}) has enrolled in <b>${yatra.title}</b> and is awaiting approval.</p>
-                 ${paymentRefId ? `<p>Payment Reference: ${paymentRefId}</p>` : ""}
+                `<p>Dear ${escapeHtml(manager.firstName)},</p>
+                 <p><b>${escapeHtml(user.firstName)} ${escapeHtml(user.lastName)}</b> (${escapeHtml(user.email)}) has enrolled in <b>${escapeHtml(yatra.title)}</b> and is awaiting approval.</p>
+                 ${paymentRefId ? `<p>Payment Reference: ${escapeHtml(paymentRefId)}</p>` : ""}
                  <p>Please <a href="${siteUrl}/yatra/${yatra._id}">open the Yatra page</a> to approve or reject this enrollment.</p>
                  <p>Thank you!</p>`
             );

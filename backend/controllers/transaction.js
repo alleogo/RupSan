@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Transaction = require("../models/Transaction");
 const uploadImageToCloudinary = require("../utils/cloudinaryUploader");
+const { escapeRegex } = require("../utils/notify");
 
 // Transaction Controller - Ledger entries, filtering, statistics, monthly tracking and export
 
@@ -8,10 +9,10 @@ const TYPES = ["Income", "Expense"];
 const PAYMENT_TYPES = ["Cash", "Online", "Cheque", "Other"];
 const SORT_FIELDS = { date: "date", amount: "amount", category: "category", party: "party", createdAt: "createdAt" };
 const PROOF_MAX_BYTES = 5 * 1024 * 1024;
+const EXPORT_MAX_ROWS = 10000;
 
 const isDay = (d) => typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d);
 const isMonth = (m) => typeof m === "string" && /^\d{4}-\d{2}$/.test(m);
-const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // Entry dates are stored as UTC midnight of the chosen day, so day boundaries are UTC too
 const dayStart = (d) => new Date(`${d}T00:00:00.000Z`);
@@ -155,7 +156,8 @@ exports.addTransaction = async (req, res) => {
             transaction
         });
     } catch (error) {
-        return res.status(error.status || 500).json({ success: false, message: error.message });
+        const status = error.status || (error.name === "ValidationError" || error.name === "CastError" ? 400 : 500);
+        return res.status(status).json({ success: false, message: error.message });
     }
 };
 
@@ -308,7 +310,7 @@ exports.getBreakdown = async (req, res) => {
     }
 };
 
-// CSV download of everything matching the filters (capped at 10,000 rows)
+// CSV download of everything matching the filters (capped at EXPORT_MAX_ROWS; headers say if it was cut short)
 exports.exportTransactions = async (req, res) => {
     try {
         const { sortBy = "date", order = "desc" } = req.query;
@@ -316,12 +318,15 @@ exports.exportTransactions = async (req, res) => {
         const sortField = SORT_FIELDS[sortBy] || "date";
         const direction = order === "asc" ? 1 : -1;
 
-        const transactions = await Transaction.find(filter)
-            .populate("recordedBy", "firstName lastName")
-            .populate("yatra", "title")
-            .sort({ [sortField]: direction, _id: direction })
-            .limit(10000)
-            .lean();
+        const [transactions, total] = await Promise.all([
+            Transaction.find(filter)
+                .populate("recordedBy", "firstName lastName")
+                .populate("yatra", "title")
+                .sort({ [sortField]: direction, _id: direction })
+                .limit(EXPORT_MAX_ROWS)
+                .lean(),
+            Transaction.countDocuments(filter)
+        ]);
 
         // Quote every text cell, and neutralise values that spreadsheets would run as formulas
         const text = (value) => {
@@ -349,6 +354,8 @@ exports.exportTransactions = async (req, res) => {
 
         const csv = "﻿" + [header.map(text).join(","), ...rows].join("\r\n");
         res.setHeader("Content-Type", "text/csv; charset=utf-8");
+        res.setHeader("X-Total-Count", String(total));
+        if (total > EXPORT_MAX_ROWS) res.setHeader("X-Export-Truncated", "true");
         res.setHeader("Content-Disposition", `attachment; filename="ledger-${new Date().toISOString().slice(0, 10)}.csv"`);
         return res.status(200).send(csv);
     } catch (error) {
@@ -373,6 +380,9 @@ exports.updateTransaction = async (req, res) => {
         if (invalid) {
             return res.status(400).json({ success: false, message: invalid });
         }
+        // Blank values mean "use the default", as when adding an entry
+        if (fields.category === "") fields.category = fields.type || transaction.type;
+        if (fields.paymentType === "") fields.paymentType = "Cash";
 
         const paymentProof = await uploadProof(req);
         if (paymentProof) {
@@ -391,7 +401,8 @@ exports.updateTransaction = async (req, res) => {
             transaction
         });
     } catch (error) {
-        return res.status(error.status || 500).json({ success: false, message: error.message });
+        const status = error.status || (error.name === "ValidationError" || error.name === "CastError" ? 400 : 500);
+        return res.status(status).json({ success: false, message: error.message });
     }
 };
 

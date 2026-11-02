@@ -22,7 +22,8 @@ app.use(cors((req, callback) => {
         origin: true,
         credentials: true,
         methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization"]
+        allowedHeaders: ["Content-Type", "Authorization"],
+        exposedHeaders: ["X-Total-Count", "X-Export-Truncated"]
     });
 }));
 app.use(express.json({ limit: '100mb' }));

@@ -1,5 +1,5 @@
 const User = require("../models/User");
-const mailSender = require("../utils/mailSender");
+const { escapeHtml, escapeRegex, getSiteUrl, notifyAdmins } = require("../utils/notify");
 
 // Update Profile
 exports.updateProfile = async (req, res) => {
@@ -53,18 +53,16 @@ exports.requestVerification = async (req, res) => {
 
         // Notify all admins of the new verification request (skip repeat requests while still pending)
         if (!alreadyPending) {
-            const admins = await User.find({ role: "Admin" }).select("email firstName");
-            const siteUrl = req.headers.origin || `${req.protocol}://${req.get("host")}`;
-            await Promise.all(admins.map(admin => mailSender(
-                admin.email,
+            const siteUrl = getSiteUrl(req);
+            const adminCount = await notifyAdmins(
                 `Participant Verification Request: ${user.firstName} ${user.lastName}`,
-                `<p>Dear ${admin.firstName},</p>
-                 <p><b>${user.firstName} ${user.lastName}</b> (${user.email}) has requested account verification.</p>
-                 <p>Phone: ${user.phoneNumber}<br/>Centre: ${user.centre}</p>
+                (admin) => `<p>Dear ${escapeHtml(admin.firstName)},</p>
+                 <p><b>${escapeHtml(user.firstName)} ${escapeHtml(user.lastName)}</b> (${escapeHtml(user.email)}) has requested account verification.</p>
+                 <p>Phone: ${escapeHtml(user.phoneNumber)}<br/>Centre: ${escapeHtml(user.centre)}</p>
                  <p>Please <a href="${siteUrl}/">log in to the dashboard</a> to verify or reject this request.</p>
                  <p>Thank you!</p>`
-            )));
-            console.log(`[requestVerification] Sent verification request for ${user.email} to ${admins.length} admin(s)`);
+            );
+            console.log(`[requestVerification] Sent verification request for ${user.email} to ${adminCount} admin(s)`);
         }
 
         user.password = undefined;
@@ -113,8 +111,7 @@ exports.getAllUsers = async (req, res) => {
         if (verificationStatus) filter.verificationStatus = verificationStatus;
 
         if (search && search.trim()) {
-            // Escape regex special characters so the search is treated as plain text
-            const escaped = search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            const escaped = escapeRegex(search.trim());
             const regex = new RegExp(escaped, "i");
             filter.$or = [
                 { firstName: regex },

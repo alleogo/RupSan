@@ -35,6 +35,11 @@ const yatraRegistrationSchema = new mongoose.Schema({
         type: String,
         enum: ["Pending", "Approved", "Rejected"],
         default: "Pending" // Starts as Pending until Manager approves the screenshot
+    },
+    // When the post-yatra review request was emailed (so the daily job never sends it twice)
+    reviewEmailSentAt: {
+        type: Date,
+        default: null
     }
 }, { timestamps: true });
 

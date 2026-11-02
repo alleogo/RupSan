@@ -123,7 +123,20 @@ const Ledger = () => {
     transactionApi.getAll({ ...JSON.parse(queryKey), ...sort, page, limit })
       .then(res => {
         if (cancelled || !res.data.success) return;
+        // After deleting the last entries on a page, step back to the new last page
+        if (res.data.transactions.length === 0 && page > 1 && res.data.pagination.total > 0) {
+          setPage(res.data.pagination.pages);
+          return;
+        }
         setTransactions(res.data.transactions);
+        // Keep ticked entries in sync with the latest data so the selection maths stays correct
+        setSelected(s => {
+          const fresh = res.data.transactions.filter(t => s[t._id]);
+          if (!fresh.length) return s;
+          const next = { ...s };
+          fresh.forEach(t => { next[t._id] = t; });
+          return next;
+        });
         setStats(res.data.stats);
         setPagination(res.data.pagination);
       })
@@ -149,9 +162,10 @@ const Ledger = () => {
     if (message) setNotice(message);
   };
 
-  const handleSaved = () => {
+  const handleSaved = (saved) => {
     const wasEdit = Boolean(form?.transaction);
     setForm(null);
+    if (saved) setSelected(s => (s[saved._id] ? { ...s, [saved._id]: saved } : s));
     refresh(wasEdit ? 'Entry updated' : 'Entry added');
   };
 
@@ -211,6 +225,9 @@ const Ledger = () => {
     setExporting(true);
     try {
       const res = await transactionApi.exportCsv({ ...queryParams, ...sort });
+      if (res.headers['x-export-truncated'] === 'true') {
+        alert(`Only the first 10,000 of ${Number(res.headers['x-total-count']).toLocaleString('en-IN')} entries were exported. Narrow the period or filters to export the rest.`);
+      }
       const url = URL.createObjectURL(res.data);
       const link = document.createElement('a');
       link.href = url;
