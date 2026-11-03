@@ -3,7 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const fileUpload = require("express-fileupload");
 const app = express();
-const { connect } = require("./config/database");
+const { connect, ensureConnected } = require("./config/database");
 
 // Middleware
 app.use(cors((req, callback) => {
@@ -36,6 +36,20 @@ app.use(fileUpload({
 
 // Connect DB
 connect();
+
+// On Vercel, make sure the database is connected before handling API requests (reconnects after a failure)
+if (process.env.VERCEL) {
+    app.use("/api", async (req, res, next) => {
+        try {
+            await ensureConnected();
+            next();
+        } catch (error) {
+            // Details (e.g. Atlas "IP isn't whitelisted") go to the logs, not to the client
+            console.error(`[DB] Unavailable for ${req.method} ${req.path}:`, error.message);
+            res.status(503).json({ success: false, message: "The database is unavailable right now. Please try again in a moment." });
+        }
+    });
+}
 
 // Routes
 app.use("/api/v1/auth", require("./routes/auth"));

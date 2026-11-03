@@ -130,6 +130,7 @@ const Users = () => {
   const [roleTarget, setRoleTarget] = useState(null);
   const [notice, setNotice] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
+  const [loadError, setLoadError] = useState('');
 
   // Wait for the admin to pause typing before searching
   useEffect(() => {
@@ -147,6 +148,7 @@ const Users = () => {
     }
     const fetchUsers = async () => {
       setLoading(true);
+      setLoadError('');
       try {
         const params = { page, limit: 20 };
         if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
@@ -160,6 +162,7 @@ const Users = () => {
         }
       } catch (error) {
         console.error('Failed to fetch users:', error);
+        setLoadError(error.response?.data?.message || 'Could not reach the server.');
       } finally {
         setLoading(false);
       }
@@ -213,7 +216,7 @@ const Users = () => {
             }}
           >
             <p style={{ fontSize: '0.85rem', marginBottom: '4px' }}>{label}</p>
-            <p style={{ fontSize: '1.6rem', fontWeight: '700', color: filters.role === role ? 'var(--accent-primary)' : 'var(--text-primary)' }}>{count}</p>
+            <p style={{ fontSize: '1.6rem', fontWeight: '700', color: filters.role === role ? 'var(--accent-primary)' : 'var(--text-primary)' }}>{loadError ? '—' : count}</p>
           </button>
         ))}
       </div>
@@ -269,6 +272,13 @@ const Users = () => {
 
       {/* Results */}
       <Card>
+        {loadError && !loading ? (
+          <div role="alert" style={{ textAlign: 'center', padding: '24px 0' }}>
+            <p style={{ color: 'var(--accent-danger)', marginBottom: '12px' }}>Couldn't load users. {loadError}</p>
+            <Button variant="default" onClick={() => setReloadKey(k => k + 1)} style={{ width: 'auto', padding: '8px 18px' }}>Try again</Button>
+          </div>
+        ) : (
+        <>
         <p style={{ fontSize: '0.9rem', marginBottom: '12px' }}>
           {loading ? 'Loading users...' : `${pagination.total} user${pagination.total === 1 ? '' : 's'} found`}
         </p>
@@ -332,6 +342,9 @@ const Users = () => {
               </tbody>
             </table>
           </div>
+        )}
+
+        </>
         )}
 
         {pagination.totalPages > 1 && (
