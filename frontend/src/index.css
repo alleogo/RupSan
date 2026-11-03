@@ -391,6 +391,27 @@ p {
   background: rgba(255, 255, 255, 0.12) !important;
 }
 
+/* Navbar back button (shown instead of the logo on inner pages) */
+.navbar-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+.navbar-back:hover,
+.navbar-back:focus-visible {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
 /* Navbar menu toggle (shown on small screens only) */
 .navbar-toggle {
   display: none;

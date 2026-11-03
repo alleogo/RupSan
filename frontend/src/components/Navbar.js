@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FiLayout, FiUser, FiLogOut, FiMenu, FiX } from 'react-icons/fi';
+import { FiLayout, FiUser, FiLogOut, FiMenu, FiX, FiArrowLeft } from 'react-icons/fi';
 import { AuthContext } from '../context/AuthContext';
 import { settingsApi, getImageUrl } from '../utils/api';
 
@@ -47,6 +47,14 @@ const Navbar = () => {
   }, [location.pathname]);
   const { user, logout } = useContext(AuthContext);
   
+  // The logo shows on the home, login and signup pages; everywhere else a back button takes its place
+  const showLogo = ['/', '/login', '/register'].includes(location.pathname);
+  const goBack = () => {
+    // 'default' means this page was opened directly (no earlier page in the app to return to)
+    if (location.key !== 'default') navigate(-1);
+    else navigate('/');
+  };
+
   const isActive = (path) => location.pathname === path ? 'var(--accent-primary)' : 'var(--text-secondary)';
 
   const handleLogout = () => {
@@ -67,6 +75,7 @@ const Navbar = () => {
       top: 0,
       zIndex: 100
     }}>
+      {showLogo ? (
       <div className="navbar-brand" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
         <div className="navbar-logo" style={{ display: 'block', width: '80px', height: '80px', flexShrink: 0, filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.5))' }}>
           {settings?.navbarLogo ? (
@@ -111,6 +120,11 @@ const Navbar = () => {
           </h2>
         </div>
       </div>
+      ) : (
+        <button type="button" className="navbar-back" onClick={goBack} aria-label="Go back">
+          <FiArrowLeft aria-hidden="true" /> Back
+        </button>
+      )}
 
       <button
         className="navbar-toggle"
