@@ -209,7 +209,17 @@ const Users = () => {
                       </td>
                       <td data-label="Centre" style={{ ...tdStyle, color: u.centre ? 'var(--text-primary)' : 'var(--text-secondary)' }}>{u.centre || '—'}</td>
                       <td data-label="Role" style={tdStyle}><Pill colors={ROLE_COLORS[u.role] || ROLE_COLORS.Participant}>{u.role}</Pill></td>
-                      <td data-label="Status" style={tdStyle}>{status ? <Pill colors={STATUS_COLORS[status] || STATUS_COLORS.Unverified}>{status}</Pill> : <span style={{ color: 'var(--text-secondary)' }}>—</span>}</td>
+                      <td data-label="Status" style={tdStyle}>
+                        <div>
+                          {status ? <Pill colors={STATUS_COLORS[status] || STATUS_COLORS.Unverified}>{status}</Pill> : <span style={{ color: 'var(--text-secondary)' }}>—</span>}
+                          {u.tempManagerFrom && (
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '4px', whiteSpace: 'nowrap' }}>
+                              {u.role === 'Manager' ? 'Temporary manager' : 'Manager from ' + new Date(u.tempManagerFrom).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'UTC' })}
+                              {u.tempManagerUntil ? ` · until ${new Date(u.tempManagerUntil).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })}` : ' · no end date'}
+                            </div>
+                          )}
+                        </div>
+                      </td>
                       <td data-label="Joined" style={{ ...tdStyle, whiteSpace: 'nowrap', color: 'var(--text-secondary)' }}>{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}</td>
                     </tr>
                   );

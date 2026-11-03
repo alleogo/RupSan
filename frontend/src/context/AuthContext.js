@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useCallback } from 'react';
 import api from '../utils/api';
 
 export const AuthContext = createContext();
@@ -14,35 +14,35 @@ export const AuthProvider = ({ children }) => {
   });
   const [loading, setLoading] = useState(true);
 
+  // Check the stored session with the server, store a refreshed token if the role changed,
+  // and update the stored user details. Logs out if the session is no longer valid.
+  const refreshSession = useCallback(() => {
+    return api.get('/auth/me')
+      .then((res) => {
+        if (res.data.token) localStorage.setItem('token', res.data.token);
+        // Only update when the details changed, so pages that depend on `user` don't refetch
+        const fresh = res.data.success && res.data.user ? JSON.stringify(res.data.user) : null;
+        if (fresh && fresh !== localStorage.getItem('user')) {
+          localStorage.setItem('user', fresh);
+          setUser(res.data.user);
+        }
+      })
+      .catch(() => {
+        // Token is expired or invalid — clear the stale session
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setUser(null);
+      });
+  }, []);
+
   useEffect(() => {
     // Validate stored session against the backend on startup
-    const token = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-
-    if (token && storedUser) {
-      // Verify the token is still valid and refresh the stored user details
-      api.get('/auth/me')
-        .then((res) => {
-          // Only update when the details changed, so pages that depend on `user` don't refetch
-          const fresh = res.data.success && res.data.user ? JSON.stringify(res.data.user) : null;
-          if (fresh && fresh !== localStorage.getItem('user')) {
-            localStorage.setItem('user', fresh);
-            setUser(res.data.user);
-          }
-        })
-        .catch(() => {
-          // Token is expired or invalid — clear the stale session
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          setUser(null);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+    if (localStorage.getItem('token') && localStorage.getItem('user')) {
+      refreshSession().finally(() => setLoading(false));
     } else {
       setLoading(false);
     }
-  }, []);
+  }, [refreshSession]);
 
   const login = async (email, password) => {
     try {
@@ -75,7 +75,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, setUser, loading, login, register, logout, refreshSession }}>
       {children}
     </AuthContext.Provider>
   );

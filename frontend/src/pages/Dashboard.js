@@ -4,6 +4,7 @@ import Button from '../components/Button';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { yatraApi, transactionApi, authApi, registrationApi, userApi, settingsApi, getImageUrl } from '../utils/api';
+import ManagerAccessRequests from '../components/ManagerAccessRequests';
 import ImageCropper, { YATRA_CARD_ASPECT, YATRA_CARD_ASPECT_CSS } from '../components/ImageCropper';
 
 const Dashboard = () => {
@@ -311,6 +312,12 @@ const Dashboard = () => {
                 </Card>
               ))}
             </div>
+          </div>
+        )}
+
+        {user?.role === 'Admin' && (
+          <div style={{ marginTop: '40px' }}>
+            <ManagerAccessRequests />
           </div>
         )}
       </div>

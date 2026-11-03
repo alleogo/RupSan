@@ -1,4 +1,6 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
+const { syncTemporaryRole } = require("../utils/tempManager");
 require("dotenv").config();
 
 exports.auth = async (req, res, next) => {
@@ -11,7 +13,15 @@ exports.auth = async (req, res, next) => {
 
         try {
             const decode = jwt.verify(token, process.env.JWT_SECRET || "fallback_secret");
+            req.tokenClaims = decode;
             req.user = decode;
+            // Temporary managers: take the role from the database so expiry and revocation apply immediately
+            if (decode.tempManager) {
+                const user = await User.findById(decode.id).select("role status tempManagerFrom tempManagerUntil tempManagerRequest");
+                if (!user) return res.status(401).json({ success: false, message: "Invalid token" });
+                await syncTemporaryRole(user);
+                req.user = { ...decode, role: user.role, status: user.status };
+            }
             console.log(`[Auth Middleware] User authenticated: ${decode._id} (Role: ${decode.role})`);
         } catch (error) {
             console.log(`[Auth Middleware] Invalid token - verification failed`);

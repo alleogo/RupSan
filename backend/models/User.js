@@ -65,6 +65,21 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         default: null
+    },
+    // Temporary manager access granted from a RoleRequest. While set, the user is a Manager
+    // between tempManagerFrom and tempManagerUntil (null = no end date) and a Participant otherwise.
+    tempManagerFrom: {
+        type: Date,
+        default: null
+    },
+    tempManagerUntil: {
+        type: Date,
+        default: null
+    },
+    tempManagerRequest: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "RoleRequest",
+        default: null
     }
 }, { timestamps: true });
 

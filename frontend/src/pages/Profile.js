@@ -5,6 +5,7 @@ import Input from '../components/Input';
 import Button from '../components/Button';
 import api, { settingsApi, getImageUrl } from '../utils/api';
 import ImageCropper from '../components/ImageCropper';
+import ManagerAccessCard from '../components/ManagerAccessCard';
 
 const Profile = () => {
   const { user, setUser } = useContext(AuthContext);
@@ -211,6 +212,8 @@ const Profile = () => {
           </div>
         </form>
       </Card>
+
+      <ManagerAccessCard />
 
       {user.role === 'Admin' && (
         <Card style={{ marginTop: '24px' }}>

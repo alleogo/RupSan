@@ -77,6 +77,16 @@ export const userApi = {
   verify: (id, action) => api.put(`/user/verify/${id}`, { action })
 };
 
+export const roleRequestApi = {
+  create: (data) => api.post('/role-request', data),
+  mine: () => api.get('/role-request/mine'),
+  cancel: (id) => api.post(`/role-request/${id}/cancel`),
+  endMyAccess: () => api.post('/role-request/end-access'),
+  list: (status) => api.get('/role-request', { params: { status } }),
+  review: (id, data) => api.post(`/role-request/${id}/review`, data),
+  revoke: (id, note) => api.post(`/role-request/${id}/revoke`, { note })
+};
+
 export const settingsApi = {
   get: () => api.get('/settings'),
   update: (data) => api.put('/settings', data, {

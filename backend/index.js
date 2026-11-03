@@ -47,9 +47,11 @@ app.use("/api/v1/expense", require("./routes/expense"));
 app.use("/api/v1/transaction", require("./routes/transaction"));
 app.use("/api/v1/review", require("./routes/review"));
 app.use("/api/v1/settings", require("./routes/settings"));
+app.use("/api/v1/role-request", require("./routes/roleRequest"));
 
 // Start Cron Jobs
 const { runYatraReviewJob } = require("./utils/cron");
+const { sweepTemporaryManagers } = require("./utils/tempManager");
 
 // Endpoint hit by Vercel Cron; Vercel sends "Authorization: Bearer <CRON_SECRET>"
 app.get("/api/v1/cron/yatra-review", async (req, res) => {
@@ -57,6 +59,7 @@ app.get("/api/v1/cron/yatra-review", async (req, res) => {
         return res.status(401).json({ success: false, message: "Unauthorized" });
     }
     await runYatraReviewJob();
+    await sweepTemporaryManagers();
     res.json({ success: true });
 });
 

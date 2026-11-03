@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const otpGenerator = require("otp-generator");
 const mailSender = require("../utils/mailSender");
 const { escapeHtml, getSiteUrl, notifyAdmins } = require("../utils/notify");
+const { syncTemporaryRole, signToken } = require("../utils/tempManager");
 require("dotenv").config();
 
 // Auth Controller - Handles user authentication and registration
@@ -138,16 +139,8 @@ exports.login = async (req, res) => {
         }
 
         if (await bcrypt.compare(password, user.password)) {
-            const payload = {
-                email: user.email,
-                id: user._id,
-                role: user.role,
-                status: user.status
-            };
-
-            const token = jwt.sign(payload, process.env.JWT_SECRET || "fallback_secret", {
-                expiresIn: "24h"
-            });
+            await syncTemporaryRole(user);
+            const token = signToken(user);
 
             user.password = undefined;
             return res.status(200).json({
@@ -209,7 +202,13 @@ exports.getMe = async (req, res) => {
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found" });
         }
-        return res.status(200).json({ success: true, user });
+        await syncTemporaryRole(user);
+
+        // Hand out a fresh token when the role or approval changed since this one was issued
+        // (e.g. temporary manager access started, ended or was revoked, or a manager was approved)
+        const claims = req.tokenClaims || req.user;
+        const stale = claims.role !== user.role || claims.status !== user.status || Boolean(claims.tempManager) !== Boolean(user.tempManagerFrom);
+        return res.status(200).json({ success: true, user, ...(stale ? { token: signToken(user) } : {}) });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
     }
