@@ -74,7 +74,8 @@ export const registrationApi = {
 export const userApi = {
   getAll: (params) => api.get('/user/all', { params }),
   getUnverified: () => api.get('/user/unverified'),
-  verify: (id, action) => api.put(`/user/verify/${id}`, { action })
+  verify: (id, action) => api.put(`/user/verify/${id}`, { action }),
+  changeRole: (id, data) => api.put(`/user/${id}/role`, data) // { role: 'Manager' | 'Participant', until?, note? }
 };
 
 export const roleRequestApi = {

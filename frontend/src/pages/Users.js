@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
 import Button from '../components/Button';
@@ -36,6 +37,83 @@ const userStatus = (u) => {
   return null;
 };
 
+const todayISO = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+// Confirm a promotion (permanent or until a date) or a demotion, with an optional note for the user
+const RoleChangeDialog = ({ target, onClose, onDone }) => {
+  const promote = target.role !== 'Manager';
+  const [duration, setDuration] = useState('permanent');
+  const [until, setUntil] = useState('');
+  const [note, setNote] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const name = `${target.firstName} ${target.lastName}`;
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (promote && duration === 'until' && !until) return setError('Choose the last day of manager access.');
+    setBusy(true);
+    setError('');
+    try {
+      const res = await userApi.changeRole(target._id, {
+        role: promote ? 'Manager' : 'Participant',
+        ...(promote && duration === 'until' ? { until } : {}),
+        note
+      });
+      onDone(res.data.message);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not change the role.');
+      setBusy(false);
+    }
+  };
+
+  // Portal to <body>: the page's fade-in animation would otherwise anchor this fixed overlay to the page
+  return createPortal(
+    <div onMouseDown={(e) => { if (e.target === e.currentTarget && !busy) onClose(); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px', backdropFilter: 'blur(4px)' }}>
+      <form onSubmit={submit} role="dialog" aria-modal="true" aria-label={promote ? `Make ${name} a manager` : `Make ${name} a participant`} className="animate-fade-in" style={{ width: '100%', maxWidth: '460px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '24px' }}>
+        <h2 style={{ marginBottom: '8px' }}>{promote ? `Make ${name} a manager` : `Make ${name} a participant`}</h2>
+        <p style={{ fontSize: '0.9rem', marginBottom: '16px' }}>
+          {promote
+            ? 'They can create and manage yatras, approve registrations and keep their own ledger.'
+            : "They lose manager access right away. Yatras they created stay, and admins can still manage them. Their ledger entries are kept but hidden from them."}
+        </p>
+
+        {promote && (
+          <div style={{ marginBottom: '16px' }}>
+            {[['permanent', 'Permanently'], ['until', 'Until a date']].map(([value, label]) => (
+              <label key={value} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', cursor: 'pointer', color: 'var(--text-primary)' }}>
+                <input type="radio" name="duration" value={value} checked={duration === value} onChange={() => setDuration(value)} style={{ accentColor: 'var(--accent-primary)' }} />
+                {label}
+              </label>
+            ))}
+            {duration === 'until' && (
+              <div style={{ marginLeft: '26px' }}>
+                <label style={labelStyle} htmlFor="role-until">Last day of manager access</label>
+                <input id="role-until" type="date" min={todayISO()} value={until} onChange={(e) => setUntil(e.target.value)} className="input-field" required />
+              </div>
+            )}
+          </div>
+        )}
+
+        <label style={labelStyle} htmlFor="role-note">Note to {target.firstName} (optional, included in the email)</label>
+        <textarea id="role-note" value={note} onChange={(e) => setNote(e.target.value)} className="input-field" rows="2" maxLength={1000} style={{ marginBottom: '16px' }} />
+
+        {error && <p role="alert" style={{ color: 'var(--accent-danger)', fontSize: '0.9rem', marginBottom: '12px' }}>{error}</p>}
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <Button type="button" variant="default" onClick={onClose} disabled={busy} style={{ flex: 1 }}>Cancel</Button>
+          <Button type="submit" variant={promote ? 'primary' : 'danger'} disabled={busy} style={{ flex: 1 }}>
+            {busy ? 'Saving…' : promote ? 'Make manager' : 'Make participant'}
+          </Button>
+        </div>
+      </form>
+    </div>,
+    document.body
+  );
+};
+
 const Users = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -49,6 +127,9 @@ const Users = () => {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filters, setFilters] = useState({ role: '', status: '', verificationStatus: '' });
   const [page, setPage] = useState(1);
+  const [roleTarget, setRoleTarget] = useState(null);
+  const [notice, setNotice] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
 
   // Wait for the admin to pause typing before searching
   useEffect(() => {
@@ -84,7 +165,7 @@ const Users = () => {
       }
     };
     fetchUsers();
-  }, [user, navigate, debouncedSearch, filters, page]);
+  }, [user, navigate, debouncedSearch, filters, page, reloadKey]);
 
   const handleFilterChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
@@ -106,6 +187,18 @@ const Users = () => {
         <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>Users</h1>
         <p style={{ color: 'var(--text-secondary)' }}>Search and filter everyone registered on the platform</p>
       </div>
+
+      {notice && (
+        <p role="status" style={{ background: 'rgba(16,185,129,0.12)', color: 'var(--accent-success)', padding: '10px 14px', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '0.9rem' }}>✓ {notice}</p>
+      )}
+
+      {roleTarget && (
+        <RoleChangeDialog
+          target={roleTarget}
+          onClose={() => setRoleTarget(null)}
+          onDone={(message) => { setRoleTarget(null); setNotice(message); setReloadKey(k => k + 1); }}
+        />
+      )}
 
       {/* Role counts */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(160px, 100%), 1fr))', gap: '16px', marginBottom: '24px' }}>
@@ -193,6 +286,7 @@ const Users = () => {
                   <th style={thStyle}>Role</th>
                   <th style={thStyle}>Status</th>
                   <th style={thStyle}>Joined</th>
+                  <th style={thStyle}><span className="sr-only">Actions</span></th>
                 </tr>
               </thead>
               <tbody>
@@ -221,6 +315,17 @@ const Users = () => {
                         </div>
                       </td>
                       <td data-label="Joined" style={{ ...tdStyle, whiteSpace: 'nowrap', color: 'var(--text-secondary)' }}>{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}</td>
+                      <td data-label="" style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        {u.role !== 'Admin' && u._id !== (user?._id || user?.id) && (
+                          <button
+                            type="button"
+                            onClick={() => setRoleTarget(u)}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, padding: '4px 6px', color: u.role === 'Manager' ? 'var(--accent-danger)' : 'var(--accent-primary)' }}
+                          >
+                            {u.role === 'Manager' ? 'Make participant' : 'Make manager'}
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}

@@ -1,4 +1,8 @@
 const User = require("../models/User");
+const RoleRequest = require("../models/RoleRequest");
+const mailSender = require("../utils/mailSender");
+const { isDay, dayStart, dayEnd, syncTemporaryRole, clearTemporaryAccess } = require("../utils/tempManager");
+const { invalidateRoleCache } = require("../middlewares/auth");
 const { escapeHtml, escapeRegex, getSiteUrl, notifyAdmins } = require("../utils/notify");
 
 // Update Profile
@@ -95,6 +99,106 @@ exports.verifyUser = async (req, res) => {
         await user.save();
 
         return res.status(200).json({ success: true, message: `User ${action.toLowerCase()}ed successfully`, user });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Promote a participant to manager (permanently or until a date) or demote a manager to participant (Admin only)
+exports.changeUserRole = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { role, until, note = "" } = req.body;
+
+        if (!["Manager", "Participant"].includes(role)) {
+            return res.status(400).json({ success: false, message: "Role must be 'Manager' or 'Participant'" });
+        }
+        if (String(userId) === String(req.user.id)) {
+            return res.status(400).json({ success: false, message: "You can't change your own role" });
+        }
+
+        const user = await User.findById(userId).select("-password");
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+        if (user.role === "Admin") {
+            return res.status(400).json({ success: false, message: "Admins can't be promoted or demoted here" });
+        }
+        await syncTemporaryRole(user);
+
+        const adminNote = String(note).trim().slice(0, 1000);
+        const previousRequest = user.tempManagerRequest;
+        let untilDate = null;
+
+        if (role === "Manager") {
+            if (user.role === "Manager" && !user.tempManagerFrom) {
+                return res.status(400).json({ success: false, message: "This user is already a manager" });
+            }
+            if (until) {
+                const today = new Date().toISOString().slice(0, 10);
+                if (!isDay(until) || until < today) {
+                    return res.status(400).json({ success: false, message: "Choose an end date from today onwards" });
+                }
+                untilDate = dayEnd(until);
+            }
+
+            // Any earlier temporary access or open request is replaced by this decision
+            if (user.tempManagerFrom) await clearTemporaryAccess(user);
+            if (previousRequest) await RoleRequest.updateOne({ _id: previousRequest, status: "Approved" }, { $set: { status: "Revoked", reviewNote: "Replaced by an admin role change" } });
+            await RoleRequest.updateMany({ user: user._id, status: "Pending" }, { $set: { status: "Cancelled", reviewNote: "Superseded by an admin role change", reviewedBy: req.user.id, reviewedAt: new Date() } });
+
+            if (untilDate) {
+                // Temporary promotion: same mechanism as an approved access request
+                const request = await RoleRequest.create({
+                    user: user._id,
+                    startDate: dayStart(new Date().toISOString().slice(0, 10)),
+                    endDate: untilDate,
+                    reason: "Promoted by an admin",
+                    status: "Approved",
+                    reviewedBy: req.user.id,
+                    reviewedAt: new Date(),
+                    reviewNote: adminNote
+                });
+                const update = { tempManagerFrom: request.startDate, tempManagerUntil: request.endDate, tempManagerRequest: request._id };
+                await User.updateOne({ _id: user._id }, { $set: update });
+                Object.assign(user, update);
+                await syncTemporaryRole(user);
+            } else {
+                const update = { role: "Manager", status: "Approved", managerApprovedBy: req.user.id };
+                await User.updateOne({ _id: user._id }, { $set: update });
+                Object.assign(user, update);
+            }
+        } else {
+            if (user.role !== "Manager" && !user.tempManagerFrom) {
+                return res.status(400).json({ success: false, message: "This user is already a participant" });
+            }
+            if (user.tempManagerFrom) {
+                await clearTemporaryAccess(user);
+                if (previousRequest) await RoleRequest.updateOne({ _id: previousRequest, status: "Approved" }, { $set: { status: "Revoked", reviewNote: adminNote || "Demoted by an admin" } });
+            }
+            const update = { role: "Participant", status: "Approved" };
+            await User.updateOne({ _id: user._id }, { $set: update });
+            Object.assign(user, update);
+        }
+
+        invalidateRoleCache(user._id);
+
+        const promoted = role === "Manager";
+        const untilText = untilDate ? untilDate.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }) : null;
+        await mailSender(
+            user.email,
+            promoted ? "You are now a Manager" : "Your account is now a Participant account",
+            `<p>Dear ${escapeHtml(user.firstName)},</p>
+             <p>${promoted
+                ? `An admin has given you manager access${untilText ? ` until ${untilText}` : ""}. Sign in to start using it.`
+                : "An admin has changed your account to a participant account. You no longer have manager access."}</p>
+             ${adminNote ? `<p><b>Note from the admin:</b> ${escapeHtml(adminNote)}</p>` : ""}
+             <p>Thank you!</p>`
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: promoted ? `${user.firstName} is now a manager${untilText ? ` until ${untilText}` : ""}` : `${user.firstName} is now a participant`,
+            user
+        });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
     }

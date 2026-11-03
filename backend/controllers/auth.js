@@ -6,6 +6,7 @@ const otpGenerator = require("otp-generator");
 const mailSender = require("../utils/mailSender");
 const { escapeHtml, getSiteUrl, notifyAdmins } = require("../utils/notify");
 const { syncTemporaryRole, signToken } = require("../utils/tempManager");
+const { invalidateRoleCache } = require("../middlewares/auth");
 require("dotenv").config();
 
 // Auth Controller - Handles user authentication and registration
@@ -174,6 +175,7 @@ exports.approveManager = async (req, res) => {
         manager.status = action === "Approve" ? "Approved" : "Rejected";
         manager.managerApprovedBy = req.user.id;
         await manager.save();
+        invalidateRoleCache(manager._id);
 
         return res.status(200).json({
             success: true,

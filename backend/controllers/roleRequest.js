@@ -3,6 +3,7 @@ const RoleRequest = require("../models/RoleRequest");
 const mailSender = require("../utils/mailSender");
 const { escapeHtml, getSiteUrl, notifyAdmins } = require("../utils/notify");
 const { isDay, dayStart, dayEnd, syncTemporaryRole, clearTemporaryAccess } = require("../utils/tempManager");
+const { invalidateRoleCache } = require("../middlewares/auth");
 
 // Role Request Controller - Participants request temporary manager access; admins review it
 
@@ -112,6 +113,7 @@ exports.endMyAccess = async (req, res) => {
         const requestId = user.tempManagerRequest;
         await clearTemporaryAccess(user);
         if (requestId) await RoleRequest.updateOne({ _id: requestId, status: "Approved" }, { $set: { status: "Ended" } });
+        invalidateRoleCache(user._id);
 
         return res.status(200).json({ success: true, message: "Manager access ended", user });
     } catch (error) {
@@ -181,6 +183,7 @@ exports.reviewRequest = async (req, res) => {
             await User.updateOne({ _id: user._id }, { $set: { tempManagerFrom: request.startDate, tempManagerUntil: request.endDate, tempManagerRequest: request._id } });
             Object.assign(user, { tempManagerFrom: request.startDate, tempManagerUntil: request.endDate, tempManagerRequest: request._id });
             await syncTemporaryRole(user);
+            invalidateRoleCache(user._id);
         } else {
             request.status = "Rejected";
             await request.save();
@@ -217,6 +220,7 @@ exports.revokeAccess = async (req, res) => {
         const user = await User.findById(request.user).select("-password");
         if (user && user.tempManagerRequest && user.tempManagerRequest.toString() === request._id.toString()) {
             await clearTemporaryAccess(user);
+            invalidateRoleCache(user._id);
         }
 
         request.status = "Revoked";

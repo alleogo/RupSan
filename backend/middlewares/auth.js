@@ -1,6 +1,29 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { syncTemporaryRole } = require("../utils/tempManager");
+
+// Manager tokens can outlive a demotion or expiry, so their role is looked up in the database.
+// Results are cached per server instance for a short time to keep manager requests fast;
+// changes made on this instance clear the cache immediately (see invalidateRoleCache).
+const ROLE_CACHE_MS = 30 * 1000;
+const roleCache = new Map();
+
+const loadCurrentRole = async (userId) => {
+    const key = String(userId);
+    const hit = roleCache.get(key);
+    let user = hit && Date.now() - hit.at < ROLE_CACHE_MS ? hit.user : null;
+    if (!user) {
+        user = await User.findById(userId).select("role status tempManagerFrom tempManagerUntil tempManagerRequest");
+        if (!user) return null;
+        if (roleCache.size > 1000) roleCache.clear();
+        roleCache.set(key, { user, at: Date.now() });
+    }
+    // Start or end a temporary manager window on time, even when the lookup came from the cache
+    await syncTemporaryRole(user);
+    return user;
+};
+
+exports.invalidateRoleCache = (userId) => roleCache.delete(String(userId));
 require("dotenv").config();
 
 exports.auth = async (req, res, next) => {
@@ -15,11 +38,10 @@ exports.auth = async (req, res, next) => {
             const decode = jwt.verify(token, process.env.JWT_SECRET || "fallback_secret");
             req.tokenClaims = decode;
             req.user = decode;
-            // Temporary managers: take the role from the database so expiry and revocation apply immediately
-            if (decode.tempManager) {
-                const user = await User.findById(decode.id).select("role status tempManagerFrom tempManagerUntil tempManagerRequest");
+            // Managers and temporary managers: use the current role, so demotion, expiry and revocation take effect
+            if (decode.role === "Manager" || decode.tempManager) {
+                const user = await loadCurrentRole(decode.id);
                 if (!user) return res.status(401).json({ success: false, message: "Invalid token" });
-                await syncTemporaryRole(user);
                 req.user = { ...decode, role: user.role, status: user.status };
             }
             console.log(`[Auth Middleware] User authenticated: ${decode._id} (Role: ${decode.role})`);
