@@ -2,7 +2,7 @@
 // the viewer's saved choice, otherwise their device setting.
 
 const KEY = 'theme';
-const THEME_COLORS = { dark: '#050505', light: '#f7f4ec' };
+const THEME_COLORS = { dark: '#050505', light: '#f7f1e4' };
 
 export const getTheme = () => (document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
 

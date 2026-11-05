@@ -1,6 +1,12 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 
+// Each picture has a cream version for light mode; CSS picks one, so only that one downloads
+const bgImage = (name) => ({
+  '--bg-dark': `url(${process.env.PUBLIC_URL}/${name}.webp)`,
+  '--bg-light': `url(${process.env.PUBLIC_URL}/${name}-light.webp)`
+});
+
 const BackgroundDesign = () => {
   const location = useLocation();
   const path = location.pathname;
@@ -10,7 +16,7 @@ const BackgroundDesign = () => {
       <div className="luxury-bg auth-bg">
         <div
           className="auth-bg-image"
-          style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/auth-bg.webp)` }}
+          style={bgImage('auth-bg')}
         ></div>
         <div className="auth-bg-overlay"></div>
       </div>
@@ -22,7 +28,7 @@ const BackgroundDesign = () => {
       <div className="luxury-bg profile-bg">
         <div
           className="profile-bg-image"
-          style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/profile-bg.webp)` }}
+          style={bgImage('profile-bg')}
         ></div>
         <div className="profile-bg-overlay"></div>
       </div>
@@ -34,7 +40,7 @@ const BackgroundDesign = () => {
       <div className="luxury-bg yatra-bg">
         <div
           className="yatra-bg-image"
-          style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/profile-bg.webp)` }}
+          style={bgImage('profile-bg')}
         ></div>
         <div className="yatra-bg-overlay"></div>
       </div>
@@ -46,7 +52,7 @@ const BackgroundDesign = () => {
       <div className="luxury-bg dashboard-bg">
         <div
           className="dash-bg-image"
-          style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/dash-bg.webp)` }}
+          style={bgImage('dash-bg')}
         ></div>
         <div className="dash-bg-overlay"></div>
       </div>
@@ -58,7 +64,7 @@ const BackgroundDesign = () => {
     <div className="luxury-bg dashboard-bg">
       <div
         className="dash-bg-image"
-        style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/dash-bg.webp)` }}
+        style={bgImage('dash-bg')}
       ></div>
       <div className="dash-bg-overlay"></div>
     </div>

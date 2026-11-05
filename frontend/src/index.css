@@ -45,7 +45,7 @@
 
 /* Light theme: warm ivory and deep gold */
 :root[data-theme="light"] {
-  --bg-primary: #f7f4ec;
+  --bg-primary: #f7f1e4;
   --bg-secondary: #ffffff;
   --text-primary: #1c1a16;
   --text-secondary: #5f5a50;
@@ -61,7 +61,7 @@
   --border-color: #e4ddcc;
   --border-gold: rgba(138, 106, 16, 0.35);
   --glass-shadow: 0 4px 20px rgba(60, 45, 10, 0.08);
-  --glass-bg: rgba(247, 244, 236, 0.85);
+  --glass-bg: rgba(247, 241, 228, 0.85);
   --glass-border: #e4ddcc;
 
   --tint-rgb: 0, 0, 0;
@@ -323,6 +323,17 @@ p {
   transform: rotate(45deg) translateZ(40px);
 }
 
+/* Background pictures: dark by default, cream versions in light mode */
+.auth-bg-image, .profile-bg-image, .yatra-bg-image, .dash-bg-image {
+  background-image: var(--bg-dark);
+}
+:root[data-theme="light"] .auth-bg-image,
+:root[data-theme="light"] .profile-bg-image,
+:root[data-theme="light"] .yatra-bg-image,
+:root[data-theme="light"] .dash-bg-image {
+  background-image: var(--bg-light);
+}
+
 /* --- Auth Background (Peacock Feather Image) --- */
 .auth-bg-image {
   position: absolute;
@@ -444,23 +455,21 @@ p {
 :root[data-theme="light"] .glass-card:hover {
   box-shadow: 0 8px 30px rgba(138, 106, 16, 0.1);
 }
-:root[data-theme="light"] .auth-bg-image {
-  background-position: right center;
-}
 :root[data-theme="light"] .auth-bg-overlay {
-  background: linear-gradient(135deg, rgba(247, 244, 236, 0.94) 0%, rgba(247, 244, 236, 0.8) 40%, rgba(247, 244, 236, 0.5) 70%, rgba(247, 244, 236, 0.25) 100%);
+  background: linear-gradient(135deg, rgba(247, 241, 228, 0.55) 0%, rgba(247, 241, 228, 0.2) 50%, transparent 100%);
 }
 :root[data-theme="light"] .profile-bg-overlay {
-  background: radial-gradient(circle at center, rgba(247, 244, 236, 0.8) 0%, rgba(247, 244, 236, 0.95) 100%);
+  background: radial-gradient(circle at center, rgba(247, 241, 228, 0.35) 0%, rgba(247, 241, 228, 0.1) 100%);
 }
 :root[data-theme="light"] .yatra-bg-image {
-  opacity: 0.1;
+  opacity: 0.45;
+  filter: none;
 }
 :root[data-theme="light"] .yatra-bg-overlay {
-  background: rgba(247, 244, 236, 0.6);
+  background: rgba(247, 241, 228, 0.3);
 }
 :root[data-theme="light"] .dash-bg-overlay {
-  background: linear-gradient(45deg, rgba(247, 244, 236, 0.7) 0%, rgba(247, 244, 236, 0.9) 60%, rgba(247, 244, 236, 0.97) 100%);
+  background: linear-gradient(45deg, rgba(247, 241, 228, 0.1) 0%, rgba(247, 241, 228, 0.35) 60%, rgba(247, 241, 228, 0.55) 100%);
 }
 
 /* Theme switch in the navbar */
