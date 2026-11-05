@@ -15,7 +15,7 @@ const td = { padding: '12px', verticalAlign: 'top' };
 const STATUS_COLORS = {
   Upcoming: ['rgba(212,175,55,0.15)', 'var(--accent-primary)'],
   Ongoing: ['rgba(16,185,129,0.15)', 'var(--accent-success)'],
-  Completed: ['rgba(255,255,255,0.08)', 'var(--text-secondary)']
+  Completed: ['rgba(var(--tint-rgb),0.08)', 'var(--text-secondary)']
 };
 const formatDay = (d) => new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 

@@ -228,7 +228,7 @@ const CentreCard = ({ centre, onChanged, onEdit, onAppoint, onChangeAdminRole })
         {centre.yatras ? ` · ${centre.yatras} yatra${centre.yatras === 1 ? '' : 's'}` : ''}
       </p>
 
-      <div style={{ padding: '12px', borderRadius: 'var(--radius-md)', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', marginBottom: '10px' }}>
+      <div style={{ padding: '12px', borderRadius: 'var(--radius-md)', background: 'rgba(var(--tint-rgb),0.03)', border: '1px solid var(--border-color)', marginBottom: '10px' }}>
         <p style={{ fontSize: '0.8rem', marginBottom: '4px' }}>Admin</p>
         {centre.admin ? (
           <>

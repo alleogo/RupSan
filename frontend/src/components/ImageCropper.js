@@ -141,7 +141,7 @@ const ImageCropper = ({ imageSrc, onCrop, onCancel, aspect = { w: 4, h: 3 } }) =
       </div>
 
       <div style={{ display: 'flex', gap: '12px' }}>
-        <Button variant="default" onClick={onCancel} style={{ flex: 1, background: 'rgba(255,255,255,0.05)' }}>Cancel</Button>
+        <Button variant="default" onClick={onCancel} style={{ flex: 1, background: 'rgba(var(--tint-rgb),0.05)' }}>Cancel</Button>
         <Button variant="primary" onClick={handleConfirm} style={{ flex: 1 }}>Save Thumbnail</Button>
       </div>
     </div>

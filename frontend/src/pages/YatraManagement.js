@@ -210,7 +210,7 @@ const YatraManagement = () => {
 
               {/* Thumbnail */}
               {cropperImageSrc ? (
-                <div style={{ marginBottom: '12px', background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '8px' }}>
+                <div style={{ marginBottom: '12px', background: 'var(--inset-bg)', padding: '12px', borderRadius: '8px' }}>
                   <p style={{ fontSize: '0.85rem', marginBottom: '8px', color: 'var(--text-secondary)' }}>Crop your thumbnail image:</p>
                   <ImageCropper
                     aspect={YATRA_CARD_ASPECT}
@@ -244,7 +244,7 @@ const YatraManagement = () => {
               </div>
 
               <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-                <Button variant="default" type="button" onClick={() => setIsModalOpen(false)} style={{ flex: 1, background: 'rgba(255,255,255,0.1)' }}>Cancel</Button>
+                <Button variant="default" type="button" onClick={() => setIsModalOpen(false)} style={{ flex: 1, background: 'rgba(var(--tint-rgb),0.1)' }}>Cancel</Button>
                 <Button type="submit" variant="primary" style={{ flex: 1 }}>Create Yatra</Button>
               </div>
             </form>

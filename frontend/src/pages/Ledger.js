@@ -524,7 +524,7 @@ const Ledger = () => {
                   {transactions.map(t => {
                     const isIncome = t.type === 'Income';
                     return (
-                      <tr key={t._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: selected[t._id] ? 'rgba(212,175,55,0.06)' : 'transparent' }}>
+                      <tr key={t._id} style={{ borderBottom: '1px solid rgba(var(--tint-rgb),0.05)', background: selected[t._id] ? 'rgba(212,175,55,0.06)' : 'transparent' }}>
                         <td data-label="Select" style={td}>
                           <input type="checkbox" checked={Boolean(selected[t._id])} onChange={() => toggleSelect(t)} aria-label={`Select ${t.description}`} style={{ accentColor: 'var(--accent-primary)', width: '16px', height: '16px' }} />
                         </td>
@@ -588,7 +588,7 @@ const Ledger = () => {
       {selectedList.length > 0 && createPortal(
         <div className="selection-bar" role="region" aria-label="Selected entries" style={{
           position: 'fixed', left: '50%', bottom: '16px', transform: 'translateX(-50%)', zIndex: 90, width: 'min(960px, calc(100% - 32px))',
-          background: '#1c1c1c', border: '1px solid var(--accent-primary)', borderRadius: 'var(--radius-lg)', boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
+          background: 'var(--surface-raised)', border: '1px solid var(--accent-primary)', borderRadius: 'var(--radius-lg)', boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
           padding: '12px 18px', display: 'flex', flexDirection: 'column', gap: '8px'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>

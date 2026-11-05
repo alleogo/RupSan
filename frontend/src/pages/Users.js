@@ -15,13 +15,13 @@ const STATUS_COLORS = {
   Verified: ['rgba(16,185,129,0.15)', 'var(--accent-success)'],
   Pending: ['rgba(245,158,11,0.15)', 'var(--accent-warning)'],
   Rejected: ['rgba(239,68,68,0.15)', 'var(--accent-danger)'],
-  Unverified: ['rgba(255,255,255,0.08)', 'var(--text-secondary)']
+  Unverified: ['rgba(var(--tint-rgb),0.08)', 'var(--text-secondary)']
 };
 
 const ROLE_COLORS = {
   Admin: ['rgba(212,175,55,0.15)', 'var(--accent-primary)'],
-  Manager: ['rgba(99,102,241,0.15)', '#a5b4fc'],
-  Participant: ['rgba(255,255,255,0.08)', 'var(--text-primary)']
+  Manager: ['rgba(99,102,241,0.15)', 'var(--accent-indigo)'],
+  Participant: ['rgba(var(--tint-rgb),0.08)', 'var(--text-primary)']
 };
 
 const Pill = ({ colors, children }) => (

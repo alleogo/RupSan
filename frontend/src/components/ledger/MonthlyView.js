@@ -69,7 +69,7 @@ const MonthlyChart = ({ months }) => {
             {/* Gridlines and y-axis ticks */}
             {ticks.map(t => (
               <g key={t}>
-                <line x1={MARGIN.left} x2={width - MARGIN.right} y1={y(t)} y2={y(t)} stroke="#2a2a2a" strokeWidth="1" />
+                <line x1={MARGIN.left} x2={width - MARGIN.right} y1={y(t)} y2={y(t)} stroke="var(--chart-grid)" strokeWidth="1" />
                 <text x={MARGIN.left - 8} y={y(t)} dy="0.32em" textAnchor="end" fontSize="11" fill="var(--text-secondary)" style={{ fontVariantNumeric: 'tabular-nums' }}>
                   {formatCompactINR(t)}
                 </text>
@@ -93,7 +93,7 @@ const MonthlyChart = ({ months }) => {
                   style={{ outline: 'none', cursor: 'default' }}
                 >
                   {/* Whole month band is the hover target */}
-                  <rect x={MARGIN.left + band * i} y={MARGIN.top} width={band} height={plotH} fill={active === i ? 'rgba(255,255,255,0.04)' : 'transparent'} />
+                  <rect x={MARGIN.left + band * i} y={MARGIN.top} width={band} height={plotH} fill={active === i ? 'rgba(var(--tint-rgb),0.04)' : 'transparent'} />
                   {incomeH > 0 && <path d={columnPath(cx - gap / 2 - barW, y(m.income), barW, incomeH)} fill={CHART_COLORS.income} opacity={active === null || active === i ? 1 : 0.55} />}
                   {expenseH > 0 && <path d={columnPath(cx + gap / 2, y(m.expense), barW, expenseH)} fill={CHART_COLORS.expense} opacity={active === null || active === i ? 1 : 0.55} />}
                   <text x={cx} y={CHART_HEIGHT - 8} textAnchor="middle" fontSize="11" fill={active === i ? 'var(--text-primary)' : 'var(--text-secondary)'}>
@@ -104,14 +104,14 @@ const MonthlyChart = ({ months }) => {
             })}
 
             {/* Baseline */}
-            <line x1={MARGIN.left} x2={width - MARGIN.right} y1={y(0)} y2={y(0)} stroke="#3a3a3a" strokeWidth="1" />
+            <line x1={MARGIN.left} x2={width - MARGIN.right} y1={y(0)} y2={y(0)} stroke="var(--chart-axis)" strokeWidth="1" />
           </svg>
         )}
 
         {activeMonth && (
           <div style={{
             position: 'absolute', top: MARGIN.top, left: tooltipLeft, transform: flip ? 'translateX(calc(-100% - 12px))' : 'translateX(12px)',
-            background: '#1c1c1c', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '10px 12px',
+            background: 'var(--surface-raised)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '10px 12px',
             pointerEvents: 'none', minWidth: '150px', boxShadow: 'var(--glass-shadow)', fontSize: '0.85rem'
           }}>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '6px', lineHeight: 1.2 }}>{MONTH_NAMES[active]}</p>
@@ -201,7 +201,7 @@ const MonthlyView = ({ filterParams, onSelectMonth }) => {
               </thead>
               <tbody>
                 {data.months.map((m, i) => (
-                  <tr key={m.month} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', opacity: m.count ? 1 : 0.5 }}>
+                  <tr key={m.month} style={{ borderBottom: '1px solid rgba(var(--tint-rgb),0.05)', opacity: m.count ? 1 : 0.5 }}>
                     <td data-label="" className="stack-title" style={{ ...td, textAlign: 'left', fontWeight: 500 }}>{MONTH_NAMES[i]} {year}</td>
                     <td data-label="Income" style={{ ...td, color: m.income ? 'var(--accent-success)' : 'var(--text-secondary)' }}>{formatINR(m.income)}</td>
                     <td data-label="Expense" style={{ ...td, color: m.expense ? 'var(--accent-danger)' : 'var(--text-secondary)' }}>{formatINR(m.expense)}</td>

@@ -21,9 +21,9 @@ const STATUS_STYLE = {
   Approved: ['rgba(16,185,129,0.15)', 'var(--accent-success)'],
   Rejected: ['rgba(239,68,68,0.15)', 'var(--accent-danger)'],
   Revoked: ['rgba(239,68,68,0.15)', 'var(--accent-danger)'],
-  Cancelled: ['rgba(255,255,255,0.08)', 'var(--text-secondary)'],
-  Ended: ['rgba(255,255,255,0.08)', 'var(--text-secondary)'],
-  Expired: ['rgba(255,255,255,0.08)', 'var(--text-secondary)']
+  Cancelled: ['rgba(var(--tint-rgb),0.08)', 'var(--text-secondary)'],
+  Ended: ['rgba(var(--tint-rgb),0.08)', 'var(--text-secondary)'],
+  Expired: ['rgba(var(--tint-rgb),0.08)', 'var(--text-secondary)']
 };
 
 const pad = (n) => String(n).padStart(2, '0');

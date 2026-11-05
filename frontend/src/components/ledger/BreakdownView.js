@@ -36,7 +36,7 @@ const ShareList = ({ title, rows, color, emptyText, onSelect }) => {
                     <span style={{ color: 'var(--text-secondary)', marginLeft: '8px', display: 'inline-block', minWidth: '3.2em', textAlign: 'right' }}>{share.toFixed(share < 10 ? 1 : 0)}%</span>
                   </span>
                 </div>
-                <div style={{ height: '6px', borderRadius: '3px', background: 'rgba(255,255,255,0.06)' }}>
+                <div style={{ height: '6px', borderRadius: '3px', background: 'rgba(var(--tint-rgb),0.06)' }}>
                   <div style={{ width: `${Math.max(share, 1)}%`, height: '100%', borderRadius: '3px', background: color }} />
                 </div>
               </button>
@@ -97,7 +97,7 @@ const BreakdownView = ({ filterParams, periodName, onSelectCategory }) => {
                   const net = p.income - p.expense;
                   const cell = { padding: '10px 12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' };
                   return (
-                    <tr key={p.paymentType} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <tr key={p.paymentType} style={{ borderBottom: '1px solid rgba(var(--tint-rgb),0.05)' }}>
                       <td data-label="" className="stack-title" style={{ ...cell, textAlign: 'left', fontWeight: 500 }}>{p.paymentType}</td>
                       <td data-label="Income" style={{ ...cell, color: 'var(--accent-success)' }}>{formatINR(p.income)}</td>
                       <td data-label="Expense" style={{ ...cell, color: 'var(--accent-danger)' }}>{formatINR(p.expense)}</td>

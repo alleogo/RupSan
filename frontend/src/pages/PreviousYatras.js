@@ -38,7 +38,7 @@ const PreviousYatras = () => {
       <div style={{ padding: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px', flexWrap: 'wrap', gap: '12px' }}>
           <h3 style={{ fontSize: '1.1rem', flex: 1 }}>{yatra.title}</h3>
-          <span style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--text-secondary)', padding: '3px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '600', marginLeft: '8px', whiteSpace: 'nowrap' }}>
+          <span style={{ background: 'rgba(var(--tint-rgb),0.08)', color: 'var(--text-secondary)', padding: '3px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '600', marginLeft: '8px', whiteSpace: 'nowrap' }}>
             Completed
           </span>
         </div>

@@ -41,7 +41,7 @@ const DeletedEntries = ({ params, onRestored }) => {
             </thead>
             <tbody>
               {entries.map(t => (
-                <tr key={t._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <tr key={t._id} style={{ borderBottom: '1px solid rgba(var(--tint-rgb),0.05)' }}>
                   <td data-label="" className="stack-title" style={{ padding: '10px 12px' }}>
                     <div style={{ color: 'var(--text-primary)' }}>{t.description}</div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{t.category} · added by {t.recordedBy ? `${t.recordedBy.firstName} ${t.recordedBy.lastName}` : '—'}</div>

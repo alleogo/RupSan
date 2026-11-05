@@ -28,6 +28,53 @@
   --radius-sm: 6px;
   --transition-fast: 0.15s ease;
   --transition-normal: 0.2s ease;
+
+  /* Theme-dependent surfaces */
+  --tint-rgb: 255, 255, 255;        /* subtle overlays: rgba(var(--tint-rgb), 0.05) */
+  --inset-bg: rgba(0, 0, 0, 0.25);   /* panels sunk into a card */
+  --input-bg: #0a0a0a;
+  --input-bg-focus: #111111;
+  --surface-raised: #1c1c1c;         /* tooltips and popovers */
+  --chart-grid: #2a2a2a;
+  --chart-axis: #3a3a3a;
+  --accent-indigo: #a5b4fc;
+  --title-gradient: linear-gradient(to bottom, #FFF8DC 0%, #FFD700 30%, #B8860B 60%, #FFD700 100%);
+  --title-shadow: drop-shadow(2px 3px 3px rgba(0,0,0,0.7)) drop-shadow(0 0 15px rgba(255,215,0,0.25));
+  color-scheme: dark;
+}
+
+/* Light theme: warm ivory and deep gold */
+:root[data-theme="light"] {
+  --bg-primary: #f7f4ec;
+  --bg-secondary: #ffffff;
+  --text-primary: #1c1a16;
+  --text-secondary: #5f5a50;
+
+  --accent-primary: #8a6a10;
+  --accent-secondary: #7a5c0c;
+  --accent-hover: #6f550c;
+
+  --accent-success: #047857;
+  --accent-danger: #b91c1c;
+  --accent-warning: #b45309;
+
+  --border-color: #e4ddcc;
+  --border-gold: rgba(138, 106, 16, 0.35);
+  --glass-shadow: 0 4px 20px rgba(60, 45, 10, 0.08);
+  --glass-bg: rgba(247, 244, 236, 0.85);
+  --glass-border: #e4ddcc;
+
+  --tint-rgb: 0, 0, 0;
+  --inset-bg: rgba(60, 45, 10, 0.05);
+  --input-bg: #fffdf8;
+  --input-bg-focus: #ffffff;
+  --surface-raised: #ffffff;
+  --chart-grid: #ece6d8;
+  --chart-axis: #cfc7b5;
+  --accent-indigo: #4338ca;
+  --title-gradient: linear-gradient(to bottom, #d4a017 0%, #a67c00 45%, #6b4f00 100%);
+  --title-shadow: drop-shadow(0 1px 1px rgba(60, 45, 10, 0.25));
+  color-scheme: light;
 }
 
 * {
@@ -47,8 +94,8 @@ body {
     radial-gradient(circle at 15% 15%, rgba(212, 175, 55, 0.08), transparent 40%),
     radial-gradient(circle at 85% 85%, rgba(243, 229, 171, 0.06), transparent 45%),
     radial-gradient(circle at 50% 50%, rgba(212, 175, 55, 0.03), transparent 60%),
-    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+    linear-gradient(rgba(var(--tint-rgb), 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--tint-rgb), 0.015) 1px, transparent 1px);
   background-size: 100% 100%, 100% 100%, 100% 100%, 60px 60px, 60px 60px;
   background-position: center center;
   background-attachment: fixed;
@@ -136,7 +183,7 @@ p {
 .input-field {
   width: 100%;
   padding: 10px 14px;
-  background: #0a0a0a;
+  background: var(--input-bg);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
@@ -147,7 +194,7 @@ p {
 
 .input-field:focus {
   border-color: var(--accent-primary);
-  background: #111111;
+  background: var(--input-bg-focus);
   box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.15);
 }
 
@@ -373,6 +420,68 @@ p {
   );
 }
 
+/* Light theme: buttons, page backgrounds and photo veils */
+:root[data-theme="light"] .btn-primary {
+  background: linear-gradient(135deg, #c9a23a, #a8831f);
+  color: #1a1405;
+  box-shadow: 0 4px 12px rgba(138, 106, 16, 0.2);
+}
+:root[data-theme="light"] .btn-primary:hover {
+  background: linear-gradient(135deg, #d6b24c, #b8902a);
+  box-shadow: 0 6px 16px rgba(138, 106, 16, 0.25);
+}
+:root[data-theme="light"] body {
+  background-image:
+    radial-gradient(circle at 15% 15%, rgba(212, 175, 55, 0.12), transparent 40%),
+    radial-gradient(circle at 85% 85%, rgba(212, 175, 55, 0.08), transparent 45%),
+    linear-gradient(rgba(var(--tint-rgb), 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--tint-rgb), 0.02) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 60px 60px, 60px 60px;
+}
+:root[data-theme="light"] .glass-card {
+  box-shadow: var(--glass-shadow);
+}
+:root[data-theme="light"] .glass-card:hover {
+  box-shadow: 0 8px 30px rgba(138, 106, 16, 0.1);
+}
+:root[data-theme="light"] .auth-bg-image {
+  background-position: right center;
+}
+:root[data-theme="light"] .auth-bg-overlay {
+  background: linear-gradient(135deg, rgba(247, 244, 236, 0.94) 0%, rgba(247, 244, 236, 0.8) 40%, rgba(247, 244, 236, 0.5) 70%, rgba(247, 244, 236, 0.25) 100%);
+}
+:root[data-theme="light"] .profile-bg-overlay {
+  background: radial-gradient(circle at center, rgba(247, 244, 236, 0.8) 0%, rgba(247, 244, 236, 0.95) 100%);
+}
+:root[data-theme="light"] .yatra-bg-image {
+  opacity: 0.1;
+}
+:root[data-theme="light"] .yatra-bg-overlay {
+  background: rgba(247, 244, 236, 0.6);
+}
+:root[data-theme="light"] .dash-bg-overlay {
+  background: linear-gradient(45deg, rgba(247, 244, 236, 0.7) 0%, rgba(247, 244, 236, 0.9) 60%, rgba(247, 244, 236, 0.97) 100%);
+}
+
+/* Theme switch in the navbar */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 1rem;
+  padding: 0;
+  transition: color var(--transition-fast);
+}
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
+  color: var(--accent-primary);
+}
+
 /* Visually hidden, still read by screen readers */
 .sr-only {
   position: absolute;
@@ -388,7 +497,7 @@ p {
 
 .breakdown-row:hover > div:last-child,
 .breakdown-row:focus-visible > div:last-child {
-  background: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(var(--tint-rgb), 0.12) !important;
 }
 
 /* Navbar back button (shown instead of the logo on inner pages) */

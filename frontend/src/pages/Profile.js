@@ -305,7 +305,6 @@ const Profile = () => {
                 type="button" 
                 onClick={handleRequestVerification} 
                 disabled={loading}
-                style={{ background: 'var(--accent-primary)' }}
               >
                 Request Verification
               </Button>
@@ -346,7 +345,7 @@ const Profile = () => {
           <h3 style={{ marginBottom: '20px' }}>Global Settings</h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '16px' }}>Customize the Navbar logo and title displayed across the app.</p>
           
-          <div style={{ marginBottom: '24px', background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
+          <div style={{ marginBottom: '24px', background: 'rgba(var(--tint-rgb),0.02)', padding: '16px', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
             <h4 style={{ marginBottom: '12px' }}>Logo Image</h4>
             {settings?.navbarLogo ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px' }}>
@@ -357,7 +356,7 @@ const Profile = () => {
               <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '12px' }}>No logo image set. Text logo will be used.</p>
             )}
             {cropperImageSrc ? (
-              <div style={{ background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '8px' }}>
+              <div style={{ background: 'var(--inset-bg)', padding: '16px', borderRadius: '8px' }}>
                 <ImageCropper 
                   imageSrc={cropperImageSrc} 
                   onCrop={handleUpdateLogo} 
@@ -378,7 +377,7 @@ const Profile = () => {
             </div>
           </form>
 
-          <div style={{ marginTop: '24px', background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
+          <div style={{ marginTop: '24px', background: 'rgba(var(--tint-rgb),0.02)', padding: '16px', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
             <h4 style={{ marginBottom: '4px' }}>Dashboard images</h4>
             <p style={{ fontSize: '0.85rem', marginBottom: '16px' }}>Shown on every admin's and manager's dashboard.</p>
             {bannerCrop ? (
@@ -392,7 +391,7 @@ const Profile = () => {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: '16px' }}>
                 {[['accountsThumbnail', 'Accounts Management'], ['yatraThumbnail', 'Yatra Management']].map(([field, label]) => (
                   <div key={field}>
-                    <div style={{ width: '100%', aspectRatio: YATRA_CARD_ASPECT_CSS, borderRadius: '8px', overflow: 'hidden', background: 'rgba(255,255,255,0.05)', marginBottom: '8px' }}>
+                    <div style={{ width: '100%', aspectRatio: YATRA_CARD_ASPECT_CSS, borderRadius: '8px', overflow: 'hidden', background: 'rgba(var(--tint-rgb),0.05)', marginBottom: '8px' }}>
                       {settings?.[field] && <img src={getImageUrl(settings[field], 600)} alt={label} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>

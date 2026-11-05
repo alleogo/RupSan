@@ -86,7 +86,7 @@ const Dashboard = () => {
     const paidTotal = (myReg?.paidOnline || 0) + (myReg?.paidCash || 0);
     const leftToPay = myReg ? Math.max(0, (myReg.amountToBePaid || 0) - paidTotal) : null;
     const statusColor = yatra.status === 'Ongoing' ? 'var(--accent-success)' : yatra.status === 'Completed' ? 'var(--text-secondary)' : 'var(--accent-primary)';
-    const statusBg = yatra.status === 'Ongoing' ? 'rgba(16,185,129,0.15)' : yatra.status === 'Completed' ? 'rgba(255,255,255,0.08)' : 'rgba(212,175,55,0.15)';
+    const statusBg = yatra.status === 'Ongoing' ? 'rgba(16,185,129,0.15)' : yatra.status === 'Completed' ? 'rgba(var(--tint-rgb),0.08)' : 'rgba(212,175,55,0.15)';
 
     let buttonText = 'View Yatra';
     if (canManageYatra(user, yatra)) buttonText = 'Manage Details';
@@ -209,7 +209,7 @@ const Dashboard = () => {
                       <p style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--accent-success)' }}>{yatras.filter(y => y.status === 'Ongoing').length}</p>
                       <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Ongoing</p>
                     </div>
-                    <div style={{ background: 'rgba(255,255,255,0.04)', padding: '16px', borderRadius: '8px', textAlign: 'center' }}>
+                    <div style={{ background: 'rgba(var(--tint-rgb),0.04)', padding: '16px', borderRadius: '8px', textAlign: 'center' }}>
                       <p style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--text-secondary)' }}>{pastYatras.length}</p>
                       <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Completed</p>
                     </div>

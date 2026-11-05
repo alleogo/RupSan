@@ -344,8 +344,8 @@ const YatraDetails = () => {
   const isManagerOrAdmin = user?.role === 'Admin' || user?.role === 'Manager';
   const isYatraOwner = canManage;
   const statusColor = yatra.status === 'Ongoing' ? 'var(--accent-success)' : yatra.status === 'Completed' ? 'var(--text-secondary)' : 'var(--accent-primary)';
-  const statusBg = yatra.status === 'Ongoing' ? 'rgba(16,185,129,0.15)' : yatra.status === 'Completed' ? 'rgba(255,255,255,0.08)' : 'rgba(212,175,55,0.15)';
-  const metaChipStyle = { display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '20px', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '0.85rem' };
+  const statusBg = yatra.status === 'Ongoing' ? 'rgba(16,185,129,0.15)' : yatra.status === 'Completed' ? 'rgba(var(--tint-rgb),0.08)' : 'rgba(212,175,55,0.15)';
+  const metaChipStyle = { display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '20px', background: 'rgba(var(--tint-rgb),0.04)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '0.85rem' };
 
   return (
     <>
@@ -406,7 +406,7 @@ const YatraDetails = () => {
         <div style={{ marginBottom: '24px', padding: '16px', background: 'rgba(212,175,55,0.05)', borderRadius: '12px', border: '1px solid var(--border-gold)' }}>
           <h3 style={{ marginBottom: '12px', fontSize: '1rem' }}>💳 My Payment Summary</h3>
           <div className="stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
+            <div style={{ background: 'rgba(var(--tint-rgb),0.05)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Total Amount</p>
               <p style={{ fontSize: '1.3rem', fontWeight: '700' }}>₹{myRegDetails.amountToBePaid || yatra.registrationFee}</p>
             </div>
@@ -487,7 +487,7 @@ const YatraDetails = () => {
                   </thead>
                   <tbody>
                     {expenses.map(exp => (
-                      <tr key={exp._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                      <tr key={exp._id} style={{ borderBottom: '1px solid rgba(var(--tint-rgb),0.05)' }}>
                         <td style={{ padding: '12px' }}>{exp.name}</td>
                         <td style={{ padding: '12px' }}>{exp.description}</td>
                         <td style={{ padding: '12px', fontWeight: 'bold' }}>₹{exp.amount}</td>
@@ -526,7 +526,7 @@ const YatraDetails = () => {
                     </thead>
                     <tbody>
                       {tickets.map(ticket => (
-                        <tr key={ticket._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                        <tr key={ticket._id} style={{ borderBottom: '1px solid rgba(var(--tint-rgb),0.05)' }}>
                           <td style={{ padding: '12px' }}>{ticket.name}</td>
                           <td style={{ padding: '12px' }}>{ticket.from} ➔ {ticket.to}</td>
                           <td style={{ padding: '12px' }}>{ticket.paymentBy}</td>
@@ -570,7 +570,7 @@ const YatraDetails = () => {
                     {registrationsLog.map(reg => {
                       const left = (reg.amountToBePaid || 0) - (reg.paidOnline || 0) - (reg.paidCash || 0);
                       return (
-                      <tr key={reg._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                      <tr key={reg._id} style={{ borderBottom: '1px solid rgba(var(--tint-rgb),0.05)' }}>
                         <td style={{ padding: '12px', color: 'var(--accent-primary)', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => { setSelectedUser(reg.user); setUserModalOpen(true); }}>
                           {reg.user.firstName} {reg.user.lastName}
                         </td>
@@ -628,7 +628,7 @@ const YatraDetails = () => {
                 {reviews.length > 0 ? (
                   <div style={{ display: 'grid', gap: '16px' }}>
                     {reviews.map(rev => (
-                      <Card key={rev._id} style={{ padding: '16px', background: 'rgba(255,255,255,0.02)' }}>
+                      <Card key={rev._id} style={{ padding: '16px', background: 'rgba(var(--tint-rgb),0.02)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                           <strong>{rev.user.firstName} {rev.user.lastName}</strong>
                           <span style={{ color: 'var(--accent-warning)' }}>{'★'.repeat(rev.rating)}</span>
@@ -657,7 +657,7 @@ const YatraDetails = () => {
                 
                 {/* Participant can add review ONLY if yatra is Completed and they're approved */}
                 {yatra.status?.toLowerCase() === 'completed' && myRegStatus?.status === 'Approved' && (
-                  <form onSubmit={myExistingReview ? handleUpdateReview : handleAddReview} style={{ marginBottom: '24px', padding: '16px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                  <form onSubmit={myExistingReview ? handleUpdateReview : handleAddReview} style={{ marginBottom: '24px', padding: '16px', background: 'rgba(var(--tint-rgb),0.05)', borderRadius: '8px' }}>
                     <h3 style={{ marginBottom: '12px' }}>{myExistingReview ? 'Edit Your Review' : 'Leave a Review'}</h3>
                     <div style={{ marginBottom: '12px' }}>
                       <label style={{ display: 'block', marginBottom: '4px' }}>Rating (1-5)</label>
@@ -674,7 +674,7 @@ const YatraDetails = () => {
                 {reviews.length > 0 ? (
                   <div style={{ display: 'grid', gap: '16px' }}>
                     {reviews.map(rev => (
-                      <Card key={rev._id} style={{ padding: '16px', background: 'rgba(255,255,255,0.02)' }}>
+                      <Card key={rev._id} style={{ padding: '16px', background: 'rgba(var(--tint-rgb),0.02)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                           <strong>{rev.user.firstName} {rev.user.lastName}</strong>
                           <span style={{ color: 'var(--accent-warning)' }}>{'★'.repeat(rev.rating)}</span>
@@ -712,7 +712,7 @@ const YatraDetails = () => {
                 <input type="text" className="input-field" value={newExpense.description} onChange={e => setNewExpense({...newExpense, description: e.target.value})} required />
               </div>
               <div style={{ display: 'flex', gap: '12px' }}>
-                <Button variant="default" onClick={() => setExpenseModalOpen(false)} style={{ flex: 1, background: 'rgba(255,255,255,0.1)' }}>Cancel</Button>
+                <Button variant="default" onClick={() => setExpenseModalOpen(false)} style={{ flex: 1, background: 'rgba(var(--tint-rgb),0.1)' }}>Cancel</Button>
                 <Button type="submit" variant="primary" style={{ flex: 1 }}>Save Expense</Button>
               </div>
             </form>
@@ -738,7 +738,7 @@ const YatraDetails = () => {
                 <input type="text" className="input-field" value={editExpenseData.description} onChange={e => setEditExpenseData({...editExpenseData, description: e.target.value})} required />
               </div>
               <div style={{ display: 'flex', gap: '12px' }}>
-                <Button variant="default" onClick={() => setEditExpenseModalOpen(false)} style={{ flex: 1, background: 'rgba(255,255,255,0.1)' }}>Cancel</Button>
+                <Button variant="default" onClick={() => setEditExpenseModalOpen(false)} style={{ flex: 1, background: 'rgba(var(--tint-rgb),0.1)' }}>Cancel</Button>
                 <Button type="submit" variant="primary" style={{ flex: 1 }}>Save Changes</Button>
               </div>
             </form>
@@ -779,7 +779,7 @@ const YatraDetails = () => {
                 <input type="file" className="input-field" onChange={e => setNewTicket({...newTicket, ticketCancellationFile: e.target.files[0]})} />
               </div>
               <div style={{ display: 'flex', gap: '12px' }}>
-                <Button variant="default" onClick={() => setTicketModalOpen(false)} style={{ flex: 1, background: 'rgba(255,255,255,0.1)' }}>Cancel</Button>
+                <Button variant="default" onClick={() => setTicketModalOpen(false)} style={{ flex: 1, background: 'rgba(var(--tint-rgb),0.1)' }}>Cancel</Button>
                 <Button type="submit" variant="primary" style={{ flex: 1 }}>Save Ticket</Button>
               </div>
             </form>
@@ -820,7 +820,7 @@ const YatraDetails = () => {
                 <input type="file" className="input-field" onChange={e => setEditTicketData({...editTicketData, newTicketCancellationFile: e.target.files[0]})} />
               </div>
               <div style={{ display: 'flex', gap: '12px' }}>
-                <Button variant="default" onClick={() => setEditTicketModalOpen(false)} style={{ flex: 1, background: 'rgba(255,255,255,0.1)' }}>Cancel</Button>
+                <Button variant="default" onClick={() => setEditTicketModalOpen(false)} style={{ flex: 1, background: 'rgba(var(--tint-rgb),0.1)' }}>Cancel</Button>
                 <Button type="submit" variant="primary" style={{ flex: 1 }}>Save Changes</Button>
               </div>
             </form>
@@ -857,7 +857,7 @@ const YatraDetails = () => {
                 <input type="number" className="input-field" value={editRegData.paidCash || 0} onChange={e => setEditRegData({...editRegData, paidCash: Number(e.target.value)})} required />
               </div>
               <div style={{ display: 'flex', gap: '12px' }}>
-                <Button variant="default" onClick={() => setRegEditModalOpen(false)} style={{ flex: 1, background: 'rgba(255,255,255,0.1)' }}>Cancel</Button>
+                <Button variant="default" onClick={() => setRegEditModalOpen(false)} style={{ flex: 1, background: 'rgba(var(--tint-rgb),0.1)' }}>Cancel</Button>
                 <Button type="submit" variant="primary" style={{ flex: 1 }}>Save Changes</Button>
               </div>
             </form>
@@ -882,7 +882,7 @@ const YatraDetails = () => {
               {selectedUser.verificationStatus && <p><strong>Verification:</strong> {selectedUser.verificationStatus}</p>}
               {selectedUser.status && <p><strong>Status:</strong> {selectedUser.status}</p>}
             </div>
-            <Button variant="default" onClick={() => setUserModalOpen(false)} style={{ width: '100%', background: 'rgba(255,255,255,0.1)' }}>Close</Button>
+            <Button variant="default" onClick={() => setUserModalOpen(false)} style={{ width: '100%', background: 'rgba(var(--tint-rgb),0.1)' }}>Close</Button>
           </div>
         </div>
       )}
@@ -899,14 +899,14 @@ const YatraDetails = () => {
               <p style={{ margin: '0 0 8px' }}><strong>Registration Fee:</strong> ₹{yatra.registrationFee}</p>
 
               {yatra.upiId && (
-                <div style={{ margin: '8px 0', padding: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                <div style={{ margin: '8px 0', padding: '10px', background: 'rgba(var(--tint-rgb),0.05)', borderRadius: '8px' }}>
                   <p style={{ margin: 0, fontSize: '0.9rem' }}><strong>UPI ID:</strong> <span style={{ color: 'var(--accent-primary)', fontFamily: 'monospace', fontSize: '1rem', userSelect: 'all' }}>{yatra.upiId}</span></p>
                 </div>
               )}
               {yatra.qrCode && (
                 <div style={{ margin: '12px 0', textAlign: 'center' }}>
                   <p style={{ marginBottom: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Scan QR Code to pay:</p>
-                  <img src={getMediaUrl(yatra.qrCode)} alt="Payment QR Code" style={{ maxWidth: '220px', borderRadius: '8px', border: '2px solid rgba(255,255,255,0.1)' }} />
+                  <img src={getMediaUrl(yatra.qrCode)} alt="Payment QR Code" style={{ maxWidth: '220px', borderRadius: '8px', border: '2px solid rgba(var(--tint-rgb),0.1)' }} />
                 </div>
               )}
             </div>
@@ -921,7 +921,7 @@ const YatraDetails = () => {
                 <input type="file" accept="image/*" className="input-field" onChange={e => setEnrollData({...enrollData, paymentScreenshot: e.target.files[0]})} required />
               </div>
               <div style={{ display: 'flex', gap: '12px' }}>
-                <Button variant="default" onClick={() => setEnrollModalOpen(false)} style={{ flex: 1, background: 'rgba(255,255,255,0.1)' }}>Cancel</Button>
+                <Button variant="default" onClick={() => setEnrollModalOpen(false)} style={{ flex: 1, background: 'rgba(var(--tint-rgb),0.1)' }}>Cancel</Button>
                 <Button type="submit" variant="primary" style={{ flex: 1 }}>Submit Enrollment</Button>
               </div>
             </form>
@@ -968,7 +968,7 @@ const YatraDetails = () => {
               </div>
               <VisibilityPicker value={editYatraData.visibility} onChange={(visibility) => setEditYatraData({ ...editYatraData, visibility })} ownCentreId={(yatra.centre?._id || yatra.centre) || userCentreId(user)} />
               {cropperImageSrc ? (
-                <div style={{ marginBottom: '12px', background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '8px' }}>
+                <div style={{ marginBottom: '12px', background: 'var(--inset-bg)', padding: '12px', borderRadius: '8px' }}>
                   <p style={{ fontSize: '0.85rem', marginBottom: '8px', color: 'var(--text-secondary)' }}>Crop your thumbnail image:</p>
                   <ImageCropper
                     aspect={YATRA_CARD_ASPECT}
@@ -992,7 +992,7 @@ const YatraDetails = () => {
                 <input type="file" accept="image/*" className="input-field" onChange={e => setEditYatraData({...editYatraData, newQrCode: e.target.files[0]})} />
               </div>
               <div style={{ display: 'flex', gap: '12px' }}>
-                <Button variant="default" onClick={() => setEditYatraModalOpen(false)} style={{ flex: 1, background: 'rgba(255,255,255,0.1)' }}>Cancel</Button>
+                <Button variant="default" onClick={() => setEditYatraModalOpen(false)} style={{ flex: 1, background: 'rgba(var(--tint-rgb),0.1)' }}>Cancel</Button>
                 <Button type="submit" variant="primary" style={{ flex: 1 }}>Save Changes</Button>
               </div>
             </form>
