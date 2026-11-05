@@ -11,7 +11,7 @@ const { escapeHtml, getSiteUrl } = require("../utils/notify");
 // Registration Controller - Manages Yatra registration and participant approval
 
 // Only the manager who created a yatra (or an admin) may handle its enrollment requests
-const canManageYatra = (user, yatra) => user.role === "Admin" || yatra.createdBy?.toString() === user.id?.toString();
+const { canSeeYatra, canManageYatra } = require("../utils/yatraAccess");
 
 exports.registerForYatra = async (req, res) => {
     try {
@@ -28,7 +28,7 @@ exports.registerForYatra = async (req, res) => {
         }
 
         const yatra = await Yatra.findById(yatraId);
-        if (!yatra) {
+        if (!yatra || !canSeeYatra(req.user, yatra)) {
             return res.status(404).json({ success: false, message: "Yatra not found" });
         }
 
@@ -88,7 +88,7 @@ exports.updateRegistrationDetails = async (req, res) => {
         const { amountToBePaid, paidOnline, paidCash, firstName, lastName } = req.body;
         console.log(`[updateRegistrationDetails] Updating registration: ${registrationId}, Amount: ${amountToBePaid}`);
 
-        const existing = await YatraRegistration.findById(registrationId).populate("yatra", "createdBy");
+        const existing = await YatraRegistration.findById(registrationId).populate("yatra", "createdBy centre visibility");
         if (!existing) {
             return res.status(404).json({ success: false, message: "Registration not found" });
         }
@@ -132,8 +132,8 @@ exports.getYatraRegistrations = async (req, res) => {
         const { status } = req.query; // 'Pending' or 'Approved'
         console.log(`[getYatraRegistrations] Fetching registrations for Yatra: ${yatraId}, Status filter: ${status || 'All'}`);
 
-        const yatra = await Yatra.findById(yatraId).select("createdBy");
-        if (!yatra) {
+        const yatra = await Yatra.findById(yatraId).select("createdBy centre visibility");
+        if (!yatra || !canSeeYatra(req.user, yatra)) {
             return res.status(404).json({ success: false, message: "Yatra not found" });
         }
         // Other managers may see the approved registrations log, but not enrollment requests

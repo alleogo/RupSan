@@ -29,6 +29,17 @@ const yatraSchema = new mongoose.Schema({
         ref: "User",
         required: true
     },
+    // The centre the yatra belongs to (its creator's centre); null for yatras from before centres
+    centre: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Centre",
+        default: null
+    },
+    // Which other centres can see it, chosen by the manager
+    visibility: {
+        allCentres: { type: Boolean, default: false },
+        centres: [{ type: mongoose.Schema.Types.ObjectId, ref: "Centre" }]
+    },
     registrationFee: {
         type: Number,
         required: true,

@@ -1,4 +1,5 @@
 const Expense = require("../models/Expense");
+const { loadManageableYatra, loadVisibleYatra } = require("../utils/yatraAccess");
 
 // Expense Controller - Handles expense tracking and splitting
 
@@ -10,6 +11,7 @@ exports.addExpense = async (req, res) => {
         if (!yatraId || !name || amount === undefined) {
             return res.status(400).json({ success: false, message: "Required fields are missing" });
         }
+        if (!(await loadManageableYatra(req, res, yatraId))) return;
 
         const expense = await Expense.create({
             yatra: yatraId,
@@ -33,6 +35,7 @@ exports.getYatraExpenses = async (req, res) => {
         const { yatraId } = req.params;
         console.log(`[getYatraExpenses] Fetching expenses for Yatra: ${yatraId}`);
         
+        if (!(await loadVisibleYatra(req, res, yatraId))) return;
         const expenses = await Expense.find({ yatra: yatraId });
         
         return res.status(200).json({
@@ -49,15 +52,16 @@ exports.updateExpense = async (req, res) => {
         const { id } = req.params;
         const { name, amount, description } = req.body;
 
-        const expense = await Expense.findByIdAndUpdate(
-            id,
-            { name, amount, description },
-            { new: true }
-        );
-
+        const expense = await Expense.findById(id);
         if (!expense) {
             return res.status(404).json({ success: false, message: "Expense not found" });
         }
+        if (!(await loadManageableYatra(req, res, expense.yatra))) return;
+
+        if (name !== undefined) expense.name = name;
+        if (amount !== undefined) expense.amount = amount;
+        if (description !== undefined) expense.description = description;
+        await expense.save();
 
         return res.status(200).json({
             success: true,
@@ -73,11 +77,12 @@ exports.deleteExpense = async (req, res) => {
     try {
         const { id } = req.params;
         
-        const expense = await Expense.findByIdAndDelete(id);
-        
+        const expense = await Expense.findById(id);
         if (!expense) {
             return res.status(404).json({ success: false, message: "Expense not found" });
         }
+        if (!(await loadManageableYatra(req, res, expense.yatra))) return;
+        await expense.deleteOne();
 
         return res.status(200).json({
             success: true,

@@ -1,4 +1,5 @@
 const Ticket = require("../models/Ticket");
+const { loadManageableYatra, loadVisibleYatra } = require("../utils/yatraAccess");
 const uploadImageToCloudinary = require("../utils/cloudinaryUploader");
 
 exports.addTicket = async (req, res) => {
@@ -8,6 +9,7 @@ exports.addTicket = async (req, res) => {
         if (!yatraId || !name || !from || !to || !paymentBy) {
             return res.status(400).json({ success: false, message: "Required fields are missing" });
         }
+        if (!(await loadManageableYatra(req, res, yatraId))) return;
 
         let ticketFilePath = null;
         if (req.files && req.files.ticketFile) {
@@ -46,6 +48,7 @@ exports.addTicket = async (req, res) => {
 exports.getYatraTickets = async (req, res) => {
     try {
         const { yatraId } = req.params;
+        if (!(await loadVisibleYatra(req, res, yatraId))) return;
         const tickets = await Ticket.find({ yatra: yatraId });
         
         return res.status(200).json({
@@ -66,6 +69,7 @@ exports.updateTicket = async (req, res) => {
         if (!ticket) {
             return res.status(404).json({ success: false, message: "Ticket not found" });
         }
+        if (!(await loadManageableYatra(req, res, ticket.yatra))) return;
 
         if (name) ticket.name = name;
         if (from) ticket.from = from;
@@ -98,10 +102,12 @@ exports.deleteTicket = async (req, res) => {
     try {
         const { id } = req.params;
         
-        const ticket = await Ticket.findByIdAndDelete(id);
+        const ticket = await Ticket.findById(id);
         if (!ticket) {
             return res.status(404).json({ success: false, message: "Ticket not found" });
         }
+        if (!(await loadManageableYatra(req, res, ticket.yatra))) return;
+        await ticket.deleteOne();
 
         return res.status(200).json({
             success: true,
