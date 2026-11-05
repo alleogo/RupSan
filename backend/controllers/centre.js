@@ -19,6 +19,16 @@ const countIn = async (modelName, filter) => {
     return mongoose.model(modelName).countDocuments(filter);
 };
 
+// Counts per centre for a collection, as a Map of centre id -> count
+const countByCentre = async (modelName) => {
+    if (!mongoose.models[modelName]) return new Map();
+    const groups = await mongoose.model(modelName).aggregate([
+        { $match: { centre: { $ne: null } } },
+        { $group: { _id: "$centre", count: { $sum: 1 } } }
+    ]);
+    return new Map(groups.map(g => [String(g._id), g.count]));
+};
+
 // Make someone an Admin of a centre: drop temporary access and open role requests they had
 const makeAdmin = async (user, centreId) => {
     if (user.tempManagerFrom) {
@@ -58,15 +68,18 @@ exports.listCentresForSuperAdmin = async (req, res) => {
             { $match: { centreId: { $ne: null } } },
             { $group: { _id: { centre: "$centreId", role: "$role" }, count: { $sum: 1 } } }
         ]);
-        const withCounts = await Promise.all(centres.map(async (c) => {
-            const counts = { Admin: 0, Manager: 0, Participant: 0 };
-            memberCounts.filter(m => String(m._id.centre) === String(c._id)).forEach(m => { counts[m._id.role] = m.count; });
-            return {
-                ...c,
-                members: counts,
-                yatras: await countIn("Yatra", { centre: c._id }),
-                entries: await countIn("Transaction", { centre: c._id })
-            };
+        const [yatraCounts, entryCounts] = await Promise.all([countByCentre("Yatra"), countByCentre("Transaction")]);
+        const membersByCentre = new Map();
+        memberCounts.forEach(m => {
+            const key = String(m._id.centre);
+            if (!membersByCentre.has(key)) membersByCentre.set(key, { Admin: 0, Manager: 0, Participant: 0 });
+            membersByCentre.get(key)[m._id.role] = m.count;
+        });
+        const withCounts = centres.map(c => ({
+            ...c,
+            members: membersByCentre.get(String(c._id)) || { Admin: 0, Manager: 0, Participant: 0 },
+            yatras: yatraCounts.get(String(c._id)) || 0,
+            entries: entryCounts.get(String(c._id)) || 0
         }));
         const unassignedAdmins = await User.find({ role: "Admin", centreId: null }).select(userFields);
         return res.status(200).json({ success: true, centres: withCounts, unassignedAdmins });
@@ -131,6 +144,7 @@ exports.appointAdmin = async (req, res) => {
         const { userId, previousAdminRole = "Manager" } = req.body;
         if (!MEMBER_ROLES.includes(previousAdminRole)) return res.status(400).json({ success: false, message: "Previous admin's new role must be Manager or Participant" });
 
+        if (!mongoose.Types.ObjectId.isValid(userId)) return res.status(400).json({ success: false, message: "Choose a person" });
         const centre = await Centre.findById(req.params.id);
         if (!centre) return res.status(404).json({ success: false, message: "Centre not found" });
         const user = await User.findById(userId).select("-password");
@@ -222,6 +236,7 @@ exports.addCoAdmin = async (req, res) => {
     try {
         const centre = await loadOwnCentreAsPrimary(req, res);
         if (!centre) return;
+        if (!mongoose.Types.ObjectId.isValid(req.body.userId)) return res.status(400).json({ success: false, message: "Choose a person" });
         const user = await User.findById(req.body.userId).select("-password");
         if (!user || String(user.centreId) !== String(centre._id)) return res.status(404).json({ success: false, message: "This person is not a member of your centre" });
         if (!MEMBER_ROLES.includes(user.role)) return res.status(400).json({ success: false, message: `${user.firstName} is already an admin` });

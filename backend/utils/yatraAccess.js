@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const Yatra = require("../models/Yatra");
 
 // Who can see and manage a yatra.
-// See: members of the yatra's centre, centres it's shared with (or all centres), and the Super Admin.
+// See: its creator, members of the yatra's centre, centres it's shared with (or all centres), and the Super Admin.
 // Yatras from before centres existed (no centre) stay visible to everyone.
 // Manage: the manager who created it and the admins (and co-admins) of its centre.
 
@@ -10,6 +10,8 @@ const idOf = (value) => (value && value._id ? String(value._id) : value ? String
 
 const canSeeYatra = (user, yatra) => {
     if (user.role === "SuperAdmin") return true;
+    // Creators keep seeing their yatras, even after moving to another centre
+    if (idOf(yatra.createdBy) === String(user.id)) return true;
     if (!yatra.centre) return true;
     if (yatra.visibility && yatra.visibility.allCentres) return true;
     if (!user.centreId) return false;
@@ -26,7 +28,7 @@ const canManageYatra = (user, yatra) => {
 // Query filter for the yatras a user can see
 const visibleYatraFilter = (user) => {
     if (user.role === "SuperAdmin") return {};
-    const or = [{ centre: null }, { "visibility.allCentres": true }];
+    const or = [{ centre: null }, { "visibility.allCentres": true }, { createdBy: new mongoose.Types.ObjectId(user.id) }];
     if (user.centreId) {
         const centre = new mongoose.Types.ObjectId(user.centreId);
         or.push({ centre }, { "visibility.centres": centre });

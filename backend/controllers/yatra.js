@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Yatra = require("../models/Yatra");
 const Centre = require("../models/Centre");
+const User = require("../models/User");
 const uploadImageToCloudinary = require("../utils/cloudinaryUploader");
 const { escapeRegex } = require("../utils/notify");
 const { canSeeYatra, canManageYatra, visibleYatraFilter, loadManageableYatra } = require("../utils/yatraAccess");
@@ -160,10 +161,17 @@ exports.updateYatra = async (req, res) => {
         // Only known fields can change (never the creator, centre or status)
         EDITABLE_FIELDS.forEach(field => { if (req.body[field] !== undefined) yatra[field] = req.body[field]; });
 
-        // Yatras from before centres join their editor's centre
-        if (!yatra.centre && req.user.centreId) yatra.centre = req.user.centreId;
+        // Yatras from before centres join their creator's centre and stay visible to every centre,
+        // as they were, unless the editor chooses otherwise
+        if (!yatra.centre) {
+            const creator = await User.findById(yatra.createdBy).select("centreId");
+            if (creator && creator.centreId) {
+                yatra.centre = creator.centreId;
+                yatra.visibility = { allCentres: true, centres: [] };
+            }
+        }
         const visibility = await parseVisibility(req.body.visibility, yatra.centre);
-        if (visibility) yatra.visibility = visibility;
+        if (visibility && yatra.centre) yatra.visibility = visibility;
 
         if (req.files) {
             if (req.files.thumbnail) {

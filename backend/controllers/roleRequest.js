@@ -163,8 +163,6 @@ exports.reviewRequest = async (req, res) => {
         if (!user || String(user.centreId) !== req.user.centreId) {
             return res.status(404).json({ success: false, message: "Request not found in your centre" });
         }
-        if (!user) return res.status(404).json({ success: false, message: "User not found" });
-
         request.reviewedBy = req.user.id;
         request.reviewedAt = new Date();
         request.reviewNote = String(note).trim().slice(0, 1000);

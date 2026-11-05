@@ -7,8 +7,11 @@ import { labelStyle, today } from './ledgerUtils';
 // Centre admins: share the account with members of the centre (Viewer or Editor, optionally until a date)
 const AccountSharing = ({ centreName, onChanged }) => {
   const [grants, setGrants] = useState(null);
-  const [members, setMembers] = useState([]);
-  const [form, setForm] = useState({ userId: '', level: 'Viewer', expiresOn: '' });
+  // Search the centre's members (a centre can have more people than fit in one list)
+  const [memberSearch, setMemberSearch] = useState('');
+  const [matches, setMatches] = useState([]);
+  const [chosen, setChosen] = useState(null);
+  const [form, setForm] = useState({ level: 'Viewer', expiresOn: '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -16,18 +19,28 @@ const AccountSharing = ({ centreName, onChanged }) => {
     accountAccessApi.list().then(res => setGrants(res.data.grants)).catch(err => setError(err.response?.data?.message || 'Could not load sharing.'));
   }, []);
 
+  useEffect(() => { load(); }, [load]);
+
   useEffect(() => {
-    load();
-    userApi.getAll({ limit: 100 }).then(res => setMembers(res.data.users.filter(u => u.role === 'Participant' || u.role === 'Manager'))).catch(() => {});
-  }, [load]);
+    const timer = setTimeout(() => {
+      const params = { limit: 8 };
+      if (memberSearch.trim()) params.search = memberSearch.trim();
+      userApi.getAll(params)
+        .then(res => setMatches(res.data.users.filter(u => u.role === 'Participant' || u.role === 'Manager')))
+        .catch(() => setMatches([]));
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [memberSearch]);
 
   const share = async (e) => {
     e.preventDefault();
     setBusy(true);
     setError('');
     try {
-      const res = await accountAccessApi.grant(form.userId, form.level, form.expiresOn || undefined);
-      setForm({ userId: '', level: 'Viewer', expiresOn: '' });
+      const res = await accountAccessApi.grant(chosen._id, form.level, form.expiresOn || undefined);
+      setForm({ level: 'Viewer', expiresOn: '' });
+      setChosen(null);
+      setMemberSearch('');
       onChanged(res.data.message);
       load();
     } catch (err) {
@@ -57,12 +70,25 @@ const AccountSharing = ({ centreName, onChanged }) => {
       </p>
 
       <form onSubmit={share} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(170px, 100%), 1fr))', gap: '12px', alignItems: 'end', marginBottom: '20px' }}>
-        <div style={{ gridColumn: 'span 2' }}>
+        <div style={{ gridColumn: '1 / -1' }}>
           <label style={labelStyle} htmlFor="share-member">Member</label>
-          <select id="share-member" value={form.userId} onChange={(e) => setForm({ ...form, userId: e.target.value })} className="input-field" required>
-            <option value="">Choose a member</option>
-            {members.map(m => <option key={m._id} value={m._id}>{m.firstName} {m.lastName} ({m.role})</option>)}
-          </select>
+          {chosen ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px', border: '1px solid var(--accent-primary)', borderRadius: 'var(--radius-md)' }}>
+              <span style={{ color: 'var(--text-primary)', flex: 1 }}>{chosen.firstName} {chosen.lastName} <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>· {chosen.role} · {chosen.email}</span></span>
+              <button type="button" onClick={() => setChosen(null)} style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', fontSize: '0.85rem' }}>Change</button>
+            </div>
+          ) : (
+            <>
+              <input id="share-member" type="search" value={memberSearch} onChange={(e) => setMemberSearch(e.target.value)} className="input-field" placeholder="Search members by name, email or phone" autoComplete="off" />
+              <div style={{ marginTop: '6px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {matches.length === 0 ? <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>No matching participants or managers.</span> : matches.map(m => (
+                  <button key={m._id} type="button" onClick={() => setChosen(m)} style={{ background: 'transparent', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '6px 12px', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.85rem' }}>
+                    {m.firstName} {m.lastName} <span style={{ color: 'var(--text-secondary)' }}>· {m.role}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
         <div>
           <label style={labelStyle} htmlFor="share-level">Access</label>
@@ -75,7 +101,7 @@ const AccountSharing = ({ centreName, onChanged }) => {
           <label style={labelStyle} htmlFor="share-until">Until (optional)</label>
           <input id="share-until" type="date" min={today()} value={form.expiresOn} onChange={(e) => setForm({ ...form, expiresOn: e.target.value })} className="input-field" />
         </div>
-        <Button type="submit" disabled={busy || !form.userId} style={{ width: '100%' }}>{busy ? 'Sharing…' : 'Share'}</Button>
+        <Button type="submit" disabled={busy || !chosen} style={{ width: '100%' }}>{busy ? 'Sharing…' : 'Share'}</Button>
       </form>
       {error && <p role="alert" style={{ color: 'var(--accent-danger)', fontSize: '0.9rem', marginBottom: '12px' }}>{error}</p>}
 

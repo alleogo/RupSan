@@ -7,8 +7,7 @@ const { escapeHtml, getSiteUrl, notifyCentreAdmins } = require("../utils/notify"
 const mongoose = require("mongoose");
 const Centre = require("../models/Centre");
 
-// Fields returned to the browser for the signed-in user
-const SELF_FIELDS = "-password -aadharNumber -aadharCard.publicId -aadharCard.format";
+const { PUBLIC_USER_FIELDS: SELF_FIELDS } = require("../utils/userFields");
 const { syncTemporaryRole, signToken } = require("../utils/tempManager");
 const { getAccountPermissions } = require("../utils/accountAccess");
 

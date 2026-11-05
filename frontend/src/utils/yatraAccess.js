@@ -21,6 +21,7 @@ export const visibilityLabel = (yatra) => {
 };
 
 export const visibilityValue = (yatra) => ({
-  allCentres: Boolean(yatra?.visibility?.allCentres),
+  // Yatras from before centres are visible to every centre
+  allCentres: !yatra?.centre || Boolean(yatra?.visibility?.allCentres),
   centres: (yatra?.visibility?.centres || []).map(idOf)
 });

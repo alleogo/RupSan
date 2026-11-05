@@ -9,7 +9,7 @@ const { invalidateRoleCache } = require("../middlewares/auth");
 const { escapeHtml, escapeRegex, getSiteUrl, notifyCentreAdmins } = require("../utils/notify");
 const { uploadPrivateImage, signedImageUrl, deletePrivateImage } = require("../utils/privateFiles");
 
-const PUBLIC_USER_FIELDS = "-password -aadharNumber -aadharCard.publicId -aadharCard.format";
+const { PUBLIC_USER_FIELDS } = require("../utils/userFields");
 const AADHAR_MAX_BYTES = 4 * 1024 * 1024;
 
 const loadPublicUser = (id) => User.findById(id).select(PUBLIC_USER_FIELDS).populate("centreId", "name");
@@ -26,7 +26,7 @@ exports.updateProfile = async (req, res) => {
             }
         }
 
-        const current = await User.findById(req.user.id).select("role centreId verificationStatus");
+        const current = await User.findById(req.user.id).select("role status centreId verificationStatus tempManagerFrom tempManagerUntil tempManagerRequest");
         const updates = {};
         if (firstName !== undefined) updates.firstName = firstName;
         if (lastName !== undefined) updates.lastName = lastName;
@@ -55,8 +55,17 @@ exports.updateProfile = async (req, res) => {
         }
 
         await User.updateOne({ _id: req.user.id }, { $set: updates });
-        // Access to the old centre's account ends when someone changes centre
-        if (updates.centreId) await AccountAccess.deleteMany({ user: req.user.id });
+        if (updates.centreId) {
+            // What the old centre's admins granted doesn't carry over: account access, temporary manager
+            // access (approved or scheduled) and pending manager-access requests
+            await AccountAccess.deleteMany({ user: req.user.id });
+            if (current.tempManagerFrom) {
+                const requestId = current.tempManagerRequest;
+                await clearTemporaryAccess(current);
+                if (requestId) await RoleRequest.updateOne({ _id: requestId, status: "Approved" }, { $set: { status: "Revoked", reviewNote: "Changed centre" } });
+            }
+            await RoleRequest.updateMany({ user: req.user.id, status: "Pending" }, { $set: { status: "Cancelled", reviewNote: "Changed centre" } });
+        }
         invalidateRoleCache(req.user.id);
         const user = await loadPublicUser(req.user.id);
         if (managerNeedsApproval) {
@@ -103,7 +112,9 @@ exports.uploadAadharCard = async (req, res) => {
     }
 };
 
-// A short-lived view of someone's Aadhaar card: themselves, their centre's admins, or the Super Admin
+// Someone's Aadhaar card image: themselves, their centre's admins, or the Super Admin.
+// The image is fetched here and sent back directly, so the (non-expiring) signed Cloudinary link
+// never reaches the browser and can't be saved or forwarded.
 exports.getAadharCard = async (req, res) => {
     try {
         const { userId } = req.params;
@@ -119,7 +130,12 @@ exports.getAadharCard = async (req, res) => {
         if (!target.aadharCard || !target.aadharCard.publicId) {
             return res.status(404).json({ success: false, message: "No Aadhaar card uploaded" });
         }
-        return res.status(200).json({ success: true, url: signedImageUrl(target.aadharCard) });
+
+        const upstream = await fetch(signedImageUrl(target.aadharCard));
+        if (!upstream.ok) return res.status(502).json({ success: false, message: "Could not load the Aadhaar card. Please try again." });
+        res.setHeader("Content-Type", upstream.headers.get("content-type") || "image/jpeg");
+        res.setHeader("Cache-Control", "private, no-store");
+        return res.status(200).send(Buffer.from(await upstream.arrayBuffer()));
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
     }

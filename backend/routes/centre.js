@@ -1,5 +1,11 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
+
+// Malformed ids in the URL are "not found", not server errors
+const validId = (req, res, next, value) => (mongoose.Types.ObjectId.isValid(value) ? next() : res.status(404).json({ success: false, message: "Not found" }));
+router.param("id", validId);
+router.param("userId", validId);
 const {
     listCentres, listCentresForSuperAdmin, createCentre, renameCentre, deleteCentre,
     appointAdmin, changeAdminRole, changeUnassignedAdminRole, getMyCentre, addCoAdmin, removeCoAdmin

@@ -84,7 +84,7 @@ export const userApi = {
   verify: (id, action) => api.put(`/user/verify/${id}`, { action }),
   changeRole: (id, data) => api.put(`/user/${id}/role`, data), // { role: 'Manager' | 'Participant', until?, note? }
   uploadAadharCard: (formData) => api.post('/user/aadhar-card', formData),
-  aadharCardUrl: (id) => api.get(`/user/${id}/aadhar-card`)
+  aadharCardImage: (id) => api.get(`/user/${id}/aadhar-card`, { responseType: 'blob' })
 };
 
 export const centreApi = {
