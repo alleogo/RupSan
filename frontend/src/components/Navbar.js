@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FiLayout, FiUser, FiLogOut, FiMenu, FiX, FiArrowLeft } from 'react-icons/fi';
+import { FiLayout, FiUser, FiLogOut, FiMenu, FiX, FiArrowLeft, FiMapPin } from 'react-icons/fi';
 import { AuthContext } from '../context/AuthContext';
 import { settingsApi, getImageUrl } from '../utils/api';
 
@@ -147,7 +147,12 @@ const Navbar = () => {
             💰 Ledger
           </Link>
         )}
-        {user?.role === 'Admin' && (
+        {user?.role === 'SuperAdmin' && (
+          <Link to="/centres" style={{ color: isActive('/centres'), textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '500', transition: 'var(--transition-fast)' }}>
+            <FiMapPin /> Centres
+          </Link>
+        )}
+        {(user?.role === 'Admin' || user?.role === 'SuperAdmin') && (
           <Link to="/users" style={{ color: isActive('/users'), textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '500', transition: 'var(--transition-fast)' }}>
             👥 Users
           </Link>
@@ -155,7 +160,7 @@ const Navbar = () => {
         {user ? (
           <>
             <Link to="/profile" style={{ color: isActive('/profile'), textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '500' }}>
-              <FiUser /> {user.firstName} ({user.role})
+              <FiUser /> {user.firstName} ({user.role === 'SuperAdmin' ? 'Super Admin' : user.role})
             </Link>
             <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: 'var(--accent-danger)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '500', fontSize: '1rem' }}>
               <FiLogOut /> Logout

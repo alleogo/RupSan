@@ -4,6 +4,7 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import { yatraApi, expenseApi, ticketApi, registrationApi, reviewApi, getMediaUrl, getImageUrl } from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
+import AadharCardLink from '../components/AadharCardLink';
 import ImageCropper, { YATRA_CARD_ASPECT, YATRA_CARD_ASPECT_CSS } from '../components/ImageCropper';
 
 const YatraDetails = () => {
@@ -868,8 +869,8 @@ const YatraDetails = () => {
               {selectedUser.phone && <p><strong>Phone:</strong> {selectedUser.phone}</p>}
               {selectedUser.phoneNumber && <p><strong>Phone:</strong> {selectedUser.phoneNumber}</p>}
               {selectedUser.gender && <p><strong>Gender:</strong> {selectedUser.gender}</p>}
-              {selectedUser.aadharNumber && <p><strong>Aadhar:</strong> {selectedUser.aadharNumber}</p>}
-              {selectedUser.centre && <p><strong>Centre:</strong> {selectedUser.centre}</p>}
+              {selectedUser.centreId?.name && <p><strong>Centre:</strong> {selectedUser.centreId.name}</p>}
+              {selectedUser.aadharCard?.uploadedAt && (user?.role === 'Admin' || user?.role === 'SuperAdmin') && <p><AadharCardLink userId={selectedUser._id} /></p>}
               {selectedUser.role && <p><strong>Role:</strong> {selectedUser.role}</p>}
               {selectedUser.verificationStatus && <p><strong>Verification:</strong> {selectedUser.verificationStatus}</p>}
               {selectedUser.status && <p><strong>Status:</strong> {selectedUser.status}</p>}

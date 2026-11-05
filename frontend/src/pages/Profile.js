@@ -3,7 +3,8 @@ import { AuthContext } from '../context/AuthContext';
 import Card from '../components/Card';
 import Input from '../components/Input';
 import Button from '../components/Button';
-import api, { settingsApi, getImageUrl } from '../utils/api';
+import api, { settingsApi, getImageUrl, centreApi, userApi } from '../utils/api';
+import AadharCardLink from '../components/AadharCardLink';
 import ImageCropper from '../components/ImageCropper';
 import ManagerAccessCard from '../components/ManagerAccessCard';
 
@@ -13,10 +14,15 @@ const Profile = () => {
     firstName: '',
     lastName: '',
     email: '',
-    aadharNumber: '',
     phoneNumber: '',
-    centre: ''
+    centreId: ''
   });
+  const [centres, setCentres] = useState([]);
+  const [uploadingCard, setUploadingCard] = useState(false);
+
+  useEffect(() => {
+    centreApi.list().then(res => { if (res.data.success) setCentres(res.data.centres); }).catch(() => {});
+  }, []);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState({ text: '', type: '' });
   
@@ -34,12 +40,11 @@ const Profile = () => {
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         email: user.email || '',
-        aadharNumber: user.aadharNumber || '',
         phoneNumber: user.phoneNumber || '',
-        centre: user.centre || ''
+        centreId: user.centreId?._id || user.centreId || ''
       });
     }
-    if (user?.role === 'Admin') {
+    if (user?.role === 'Admin' || user?.role === 'SuperAdmin') {
       const fetchSettings = async () => {
         try {
           const res = await settingsApi.get();
@@ -119,7 +124,7 @@ const Profile = () => {
     try {
       const res = await api.put('/user/profile', formData);
       if (res.data.success) {
-        setMsg({ text: 'Profile updated successfully!', type: 'success' });
+        setMsg({ text: res.data.message, type: 'success' });
         // Update user context and localStorage
         const updatedUser = res.data.user;
         setUser(updatedUser);
@@ -137,7 +142,9 @@ const Profile = () => {
     try {
       const res = await api.post('/user/request-verification');
       if (res.data.success) {
-        setMsg({ text: 'Verification requested successfully! Wait for Admin approval.', type: 'success' });
+        setMsg({ text: "Verification requested. Your centre's admin will check your details.", type: 'success' });
+        setUser(res.data.user);
+        localStorage.setItem('user', JSON.stringify(res.data.user));
       }
     } catch (error) {
       setMsg({ text: error.response?.data?.message || 'Failed to request verification', type: 'error' });
@@ -145,7 +152,36 @@ const Profile = () => {
     setLoading(false);
   };
 
+  const handleAadharUpload = async (e) => {
+    const file = e.target.files[0];
+    e.target.value = null;
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return setMsg({ text: 'Choose a photo (JPG or PNG) of your Aadhaar card.', type: 'error' });
+    if (file.size > 4 * 1024 * 1024) return setMsg({ text: 'The photo must be smaller than 4MB.', type: 'error' });
+    setUploadingCard(true);
+    setMsg({ text: '', type: '' });
+    try {
+      const data = new FormData();
+      data.append('aadharCard', file);
+      const res = await userApi.uploadAadharCard(data);
+      setUser(res.data.user);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+      setMsg({ text: 'Aadhaar card uploaded.', type: 'success' });
+    } catch (error) {
+      setMsg({ text: error.response?.data?.message || 'Could not upload the Aadhaar card.', type: 'error' });
+    }
+    setUploadingCard(false);
+  };
+
   if (!user) return <div>Loading...</div>;
+
+  const isParticipant = user.role === 'Participant';
+  const savedCentreId = user.centreId?._id || user.centreId || '';
+  const missingForVerification = [
+    !user.phoneNumber && 'phone number',
+    !savedCentreId && 'centre',
+    !user.aadharCard?.uploadedAt && 'Aadhaar card photo'
+  ].filter(Boolean);
 
   return (
     <div className="animate-fade-in" style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
@@ -154,7 +190,7 @@ const Profile = () => {
       <Card>
         <div style={{ marginBottom: '20px' }}>
           <h3>Personal Information</h3>
-          <p><strong>Role:</strong> {user.role}</p>
+          <p><strong>Role:</strong> {user.role === 'SuperAdmin' ? 'Super Admin' : user.role}{user.centreId?.name ? ` · ${user.centreId.name}` : ''}</p>
           
           {user.role === 'Participant' && (
             <p>
@@ -192,14 +228,42 @@ const Profile = () => {
             </div>
           </div>
           <Input label="Email Address" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="email@example.com" />
-          <Input label="Aadhar Number" name="aadharNumber" value={formData.aadharNumber} onChange={handleChange} placeholder="1234 5678 9012" />
           <Input label="Phone Number" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} placeholder="+91 9876543210" />
-          <Input label="Centre" name="centre" value={formData.centre} onChange={handleChange} placeholder="Centre" />
+          <div style={{ marginBottom: '16px' }}>
+            <label htmlFor="profile-centre" style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Centre</label>
+            <select id="profile-centre" name="centreId" value={formData.centreId} onChange={handleChange} className="input-field" disabled={!isParticipant} style={{ cursor: isParticipant ? 'pointer' : 'not-allowed' }}>
+              <option value="">Choose your centre</option>
+              {centres.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+            </select>
+            {isParticipant && formData.centreId && formData.centreId !== savedCentreId && savedCentreId && (
+              <p style={{ fontSize: '0.8rem', marginTop: '6px', color: 'var(--accent-warning)' }}>Changing your centre means the new centre's admin has to verify you again.</p>
+            )}
+            {!isParticipant && <p style={{ fontSize: '0.8rem', marginTop: '6px' }}>Ask your centre's admin if your centre needs to change.</p>}
+          </div>
+
+          <div style={{ marginBottom: '16px' }}>
+            <span style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Aadhaar card</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              {user.aadharCard?.uploadedAt ? (
+                <>
+                  <span style={{ fontSize: '0.9rem', color: 'var(--accent-success)' }}>✓ Uploaded {new Date(user.aadharCard.uploadedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                  <AadharCardLink userId={user._id || user.id} label="View my card" />
+                </>
+              ) : (
+                <span style={{ fontSize: '0.9rem' }}>Not uploaded yet</span>
+              )}
+              <label style={{ fontSize: '0.9rem', color: 'var(--accent-primary)', cursor: uploadingCard ? 'wait' : 'pointer', textDecoration: 'underline' }}>
+                {uploadingCard ? 'Uploading…' : user.aadharCard?.uploadedAt ? 'Replace photo' : 'Upload photo'}
+                <input type="file" accept="image/*" onChange={handleAadharUpload} disabled={uploadingCard} style={{ display: 'none' }} />
+              </label>
+            </div>
+            <p style={{ fontSize: '0.8rem', marginTop: '6px' }}>A clear photo of the front of your card. Only your centre's admins can see it.</p>
+          </div>
           
           <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
             <Button type="submit" disabled={loading}>Update Details</Button>
             
-            {user.role === 'Participant' && user.verificationStatus !== 'Verified' && user.verificationStatus !== 'Pending' && (
+            {isParticipant && user.verificationStatus !== 'Verified' && user.verificationStatus !== 'Pending' && missingForVerification.length === 0 && (
               <Button 
                 type="button" 
                 onClick={handleRequestVerification} 
@@ -211,11 +275,14 @@ const Profile = () => {
             )}
           </div>
         </form>
+        {isParticipant && user.verificationStatus !== 'Verified' && user.verificationStatus !== 'Pending' && missingForVerification.length > 0 && (
+          <p style={{ fontSize: '0.85rem', marginTop: '12px', color: 'var(--accent-warning)' }}>To get verified, add your {missingForVerification.join(', ')} and save.</p>
+        )}
       </Card>
 
       <ManagerAccessCard />
 
-      {user.role === 'Admin' && (
+      {(user.role === 'Admin' || user.role === 'SuperAdmin') && (
         <Card style={{ marginTop: '24px' }}>
           <h3 style={{ marginBottom: '20px' }}>Global Settings</h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '16px' }}>Customize the Navbar logo and title displayed across the app.</p>

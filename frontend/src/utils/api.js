@@ -75,7 +75,25 @@ export const userApi = {
   getAll: (params) => api.get('/user/all', { params }),
   getUnverified: () => api.get('/user/unverified'),
   verify: (id, action) => api.put(`/user/verify/${id}`, { action }),
-  changeRole: (id, data) => api.put(`/user/${id}/role`, data) // { role: 'Manager' | 'Participant', until?, note? }
+  changeRole: (id, data) => api.put(`/user/${id}/role`, data), // { role: 'Manager' | 'Participant', until?, note? }
+  uploadAadharCard: (formData) => api.post('/user/aadhar-card', formData),
+  aadharCardUrl: (id) => api.get(`/user/${id}/aadhar-card`)
+};
+
+export const centreApi = {
+  list: () => api.get('/centres'),
+  // Super Admin
+  manage: () => api.get('/centres/manage'),
+  create: (name) => api.post('/centres', { name }),
+  rename: (id, name) => api.put(`/centres/${id}`, { name }),
+  remove: (id) => api.delete(`/centres/${id}`),
+  appointAdmin: (id, userId, previousAdminRole) => api.put(`/centres/${id}/admin`, { userId, previousAdminRole }),
+  changeAdminRole: (id, role) => api.put(`/centres/${id}/admin/role`, { role }),
+  changeUnassignedAdminRole: (userId, role) => api.put(`/centres/unassigned-admins/${userId}/role`, { role }),
+  // Centre admin / co-admins
+  mine: () => api.get('/centres/mine'),
+  addCoAdmin: (userId) => api.post('/centres/mine/co-admins', { userId }),
+  removeCoAdmin: (userId, role) => api.delete(`/centres/mine/co-admins/${userId}`, { data: { role } })
 };
 
 export const roleRequestApi = {

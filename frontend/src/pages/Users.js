@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
 import Button from '../components/Button';
-import { userApi } from '../utils/api';
+import { userApi, centreApi } from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
 
 const labelStyle = { display: 'block', marginBottom: '4px', fontSize: '0.85rem', color: 'var(--text-secondary)' };
@@ -114,6 +114,8 @@ const RoleChangeDialog = ({ target, onClose, onDone }) => {
   );
 };
 
+const actionButton = { background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, padding: '4px 6px' };
+
 const Users = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -125,7 +127,10 @@ const Users = () => {
 
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [filters, setFilters] = useState({ role: '', status: '', verificationStatus: '' });
+  const [filters, setFilters] = useState({ role: '', status: '', verificationStatus: '', centreId: '' });
+  const isSuperAdmin = user?.role === 'SuperAdmin';
+  const [centres, setCentres] = useState([]); // Super Admin's centre filter
+  const [myCentre, setMyCentre] = useState(null); // admin's own centre: who is admin / co-admin
   const [page, setPage] = useState(1);
   const [roleTarget, setRoleTarget] = useState(null);
   const [notice, setNotice] = useState('');
@@ -142,7 +147,12 @@ const Users = () => {
   }, [search]);
 
   useEffect(() => {
-    if (!user || user.role !== 'Admin') {
+    if (user?.role === 'SuperAdmin') centreApi.list().then(res => setCentres(res.data.centres)).catch(() => {});
+    if (user?.role === 'Admin') centreApi.mine().then(res => setMyCentre(res.data)).catch(() => {});
+  }, [user, reloadKey]);
+
+  useEffect(() => {
+    if (!user || (user.role !== 'Admin' && user.role !== 'SuperAdmin')) {
       navigate('/');
       return;
     }
@@ -177,18 +187,45 @@ const Users = () => {
 
   const clearFilters = () => {
     setSearch('');
-    setFilters({ role: '', status: '', verificationStatus: '' });
+    setFilters({ role: '', status: '', verificationStatus: '', centreId: '' });
     setPage(1);
   };
 
-  const hasFilters = search || filters.role || filters.status || filters.verificationStatus;
+  const hasFilters = search || filters.role || filters.status || filters.verificationStatus || filters.centreId;
+
+  const coAdminIds = (myCentre?.centre?.coAdmins || []).map(c => c._id);
+  const isCoAdmin = (u) => u.role === 'Admin' && coAdminIds.includes(u._id);
+  const roleLabel = (u) => {
+    if (u.role === 'SuperAdmin') return 'Super Admin';
+    if (isCoAdmin(u)) return 'Co-admin';
+    return u.role;
+  };
+
+  const changeCoAdmin = async (u, make) => {
+    const name = `${u.firstName} ${u.lastName}`;
+    let role = 'Manager';
+    if (make) {
+      if (!window.confirm(`Make ${name} a co-admin? They'll be able to manage your centre's members, yatras and account.`)) return;
+    } else {
+      const answer = window.prompt(`Remove ${name} as co-admin. Their new role (Manager or Participant):`, 'Manager');
+      if (answer === null) return;
+      role = /^p/i.test(answer.trim()) ? 'Participant' : 'Manager';
+    }
+    try {
+      const res = make ? await centreApi.addCoAdmin(u._id) : await centreApi.removeCoAdmin(u._id, role);
+      setNotice(res.data.message);
+      setReloadKey(k => k + 1);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Could not update co-admins.');
+    }
+  };
   const totalUsers = counts.Admin + counts.Manager + counts.Participant;
 
   return (
     <div className="animate-fade-in" style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
       <div style={{ marginBottom: '24px' }}>
         <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>Users</h1>
-        <p style={{ color: 'var(--text-secondary)' }}>Search and filter everyone registered on the platform</p>
+        <p style={{ color: 'var(--text-secondary)' }}>{isSuperAdmin ? 'Everyone on the platform, across all centres' : `Members of ${user?.centreId?.name || 'your centre'}`}</p>
       </div>
 
       {notice && (
@@ -230,7 +267,7 @@ const Users = () => {
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Name, email, phone, centre or Aadhar"
+              placeholder="Name, email or phone"
               className="input-field"
               style={{ width: '100%' }}
             />
@@ -245,6 +282,17 @@ const Users = () => {
               <option value="Admin">Admin</option>
             </select>
           </div>
+
+          {isSuperAdmin && (
+            <div>
+              <label style={labelStyle}>Centre</label>
+              <select name="centreId" value={filters.centreId} onChange={handleFilterChange} className="input-field" style={{ width: '100%' }}>
+                <option value="">All centres</option>
+                {centres.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                <option value="none">No centre</option>
+              </select>
+            </div>
+          )}
 
           <div>
             <label style={labelStyle}>Manager Approval</label>
@@ -311,8 +359,8 @@ const Users = () => {
                           {u.phoneNumber && <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{u.phoneNumber}</div>}
                         </div>
                       </td>
-                      <td data-label="Centre" style={{ ...tdStyle, color: u.centre ? 'var(--text-primary)' : 'var(--text-secondary)' }}>{u.centre || '—'}</td>
-                      <td data-label="Role" style={tdStyle}><Pill colors={ROLE_COLORS[u.role] || ROLE_COLORS.Participant}>{u.role}</Pill></td>
+                      <td data-label="Centre" style={{ ...tdStyle, color: u.centreId ? 'var(--text-primary)' : 'var(--text-secondary)' }}>{u.centreId?.name || '—'}</td>
+                      <td data-label="Role" style={tdStyle}><Pill colors={ROLE_COLORS[u.role] || ROLE_COLORS.Participant}>{roleLabel(u)}</Pill></td>
                       <td data-label="Status" style={tdStyle}>
                         <div>
                           {status ? <Pill colors={STATUS_COLORS[status] || STATUS_COLORS.Unverified}>{status}</Pill> : <span style={{ color: 'var(--text-secondary)' }}>—</span>}
@@ -326,14 +374,20 @@ const Users = () => {
                       </td>
                       <td data-label="Joined" style={{ ...tdStyle, whiteSpace: 'nowrap', color: 'var(--text-secondary)' }}>{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}</td>
                       <td data-label="" style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap' }}>
-                        {u.role !== 'Admin' && u._id !== (user?._id || user?.id) && (
+                        {!isSuperAdmin && (u.role === 'Participant' || u.role === 'Manager') && (
                           <button
                             type="button"
                             onClick={() => setRoleTarget(u)}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, padding: '4px 6px', color: u.role === 'Manager' ? 'var(--accent-danger)' : 'var(--accent-primary)' }}
+                            style={{ ...actionButton, color: u.role === 'Manager' ? 'var(--accent-danger)' : 'var(--accent-primary)' }}
                           >
                             {u.role === 'Manager' ? 'Make participant' : 'Make manager'}
                           </button>
+                        )}
+                        {myCentre?.isPrimaryAdmin && (u.role === 'Participant' || u.role === 'Manager') && (
+                          <button type="button" onClick={() => changeCoAdmin(u, true)} style={{ ...actionButton, color: 'var(--accent-primary)' }}>Make co-admin</button>
+                        )}
+                        {myCentre?.isPrimaryAdmin && isCoAdmin(u) && (
+                          <button type="button" onClick={() => changeCoAdmin(u, false)} style={{ ...actionButton, color: 'var(--accent-danger)' }}>Remove co-admin</button>
                         )}
                       </td>
                     </tr>

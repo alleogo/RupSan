@@ -3,6 +3,9 @@ const Yatra = require("../models/Yatra");
 const User = require("../models/User");
 const uploadImageToCloudinary = require("../utils/cloudinaryUploader");
 const mailSender = require("../utils/mailSender");
+
+// Never send password hashes or private Aadhaar details with a registration
+const USER_FIELDS = "firstName lastName email phoneNumber centreId role verificationStatus aadharCard.uploadedAt";
 const { escapeHtml, getSiteUrl } = require("../utils/notify");
 
 // Registration Controller - Manages Yatra registration and participant approval
@@ -97,7 +100,7 @@ exports.updateRegistrationDetails = async (req, res) => {
             registrationId, 
             { amountToBePaid, paidOnline, paidCash }, 
             { new: true }
-        ).populate("user").populate("yatra");
+        ).populate({ path: "user", select: USER_FIELDS, populate: { path: "centreId", select: "name" } }).populate("yatra");
 
         if (!registration) {
             return res.status(404).json({ success: false, message: "Registration not found" });
@@ -110,7 +113,7 @@ exports.updateRegistrationDetails = async (req, res) => {
             await User.findByIdAndUpdate(registration.user._id, updates);
             
             // Re-populate user to return updated name
-            await registration.populate("user");
+            await registration.populate({ path: "user", select: USER_FIELDS, populate: { path: "centreId", select: "name" } });
         }
 
         return res.status(200).json({
@@ -143,7 +146,7 @@ exports.getYatraRegistrations = async (req, res) => {
             query.status = status;
         }
 
-        const registrations = await YatraRegistration.find(query).populate("user");
+        const registrations = await YatraRegistration.find(query).populate({ path: "user", select: USER_FIELDS, populate: { path: "centreId", select: "name" } });
         
         return res.status(200).json({
             success: true,
@@ -178,7 +181,7 @@ exports.approveRegistration = async (req, res) => {
         const { action } = req.body; // 'Approve' or 'Reject'
         console.log(`[approveRegistration] Manager action: ${action} for registration: ${registrationId}`);
 
-        const registration = await YatraRegistration.findById(registrationId).populate("user").populate("yatra");
+        const registration = await YatraRegistration.findById(registrationId).populate({ path: "user", select: USER_FIELDS, populate: { path: "centreId", select: "name" } }).populate("yatra");
         if (!registration) {
             return res.status(404).json({ success: false, message: "Registration not found" });
         }

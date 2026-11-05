@@ -5,6 +5,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { yatraApi, transactionApi, authApi, registrationApi, userApi, settingsApi, getImageUrl } from '../utils/api';
 import ManagerAccessRequests from '../components/ManagerAccessRequests';
+import AadharCardLink from '../components/AadharCardLink';
+import SuperAdminHome from '../components/SuperAdminHome';
 import ImageCropper, { YATRA_CARD_ASPECT, YATRA_CARD_ASPECT_CSS } from '../components/ImageCropper';
 
 const Dashboard = () => {
@@ -104,6 +106,7 @@ const Dashboard = () => {
   const myRegMap = {};
   myRegistrations.forEach(reg => { if (reg.yatra) myRegMap[reg.yatra._id] = reg; });
 
+  if (user?.role === 'SuperAdmin') return <SuperAdminHome />;
   if (loading) return <div style={{ padding: '24px', textAlign: 'center' }}>Loading dashboard...</div>;
 
   const YatraCard = ({ yatra, isPast = false }) => {
@@ -283,9 +286,9 @@ const Dashboard = () => {
                 <Card key={u._id} style={{ borderLeft: '4px solid var(--accent-warning)' }}>
                   <h3 style={{ marginBottom: '8px' }}>{u.firstName} {u.lastName}</h3>
                   <p style={{ fontSize: '0.9rem', marginBottom: '4px' }}><strong>Email:</strong> {u.email}</p>
-                  <p style={{ fontSize: '0.9rem', marginBottom: '4px' }}><strong>Aadhar:</strong> {u.aadharNumber}</p>
                   <p style={{ fontSize: '0.9rem', marginBottom: '4px' }}><strong>Phone:</strong> {u.phoneNumber}</p>
-                  <p style={{ fontSize: '0.9rem', marginBottom: '16px' }}><strong>Centre:</strong> {u.centre}</p>
+                  <p style={{ fontSize: '0.9rem', marginBottom: '8px' }}><strong>Centre:</strong> {u.centreId?.name || '—'}</p>
+                  <p style={{ marginBottom: '16px' }}><AadharCardLink userId={u._id} /></p>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <Button variant="primary" onClick={() => handleVerifyUser(u._id, 'Verify')} style={{ flex: 1, padding: '8px' }}>Approve</Button>
                     <Button variant="danger" onClick={() => handleVerifyUser(u._id, 'Reject')} style={{ flex: 1, padding: '8px' }}>Reject</Button>

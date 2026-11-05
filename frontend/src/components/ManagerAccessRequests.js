@@ -36,7 +36,7 @@ const PendingRequest = ({ request, onDone }) => {
       <h3 style={{ marginBottom: '6px' }}>{u.firstName} {u.lastName}</h3>
       <p style={{ fontSize: '0.85rem', overflowWrap: 'anywhere' }}>{u.email}{u.phoneNumber ? ` · ${u.phoneNumber}` : ''}</p>
       <p style={{ fontSize: '0.85rem', marginBottom: '10px' }}>
-        {u.centre ? `${u.centre} · ` : ''}Verification: <span style={{ color: u.verificationStatus === 'Verified' ? 'var(--accent-success)' : 'var(--accent-warning)' }}>{u.verificationStatus || 'Unverified'}</span>
+        Verification: <span style={{ color: u.verificationStatus === 'Verified' ? 'var(--accent-success)' : 'var(--accent-warning)' }}>{u.verificationStatus || 'Unverified'}</span>
       </p>
       <p style={{ fontSize: '0.9rem', color: 'var(--text-primary)', marginBottom: '4px' }}>Asked for: {windowText(request.startDate, request.endDate)}</p>
       <p style={{ fontSize: '0.9rem', fontStyle: 'italic', marginBottom: '14px' }}>“{request.reason}”</p>

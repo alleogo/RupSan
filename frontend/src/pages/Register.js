@@ -1,10 +1,10 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { AuthContext } from '../context/AuthContext';
-import api from '../utils/api';
+import api, { centreApi } from '../utils/api';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -21,9 +21,14 @@ const Register = () => {
     password: '',
     confirmPassword: '',
     role: 'Participant',
-    adminSecret: '',
+    centreId: '',
     otp: ''
   });
+
+  const [centres, setCentres] = useState([]);
+  useEffect(() => {
+    centreApi.list().then(res => { if (res.data.success) setCentres(res.data.centres); }).catch(() => {});
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -97,25 +102,22 @@ const Register = () => {
               >
                 <option value="Participant">Participant</option>
                 <option value="Manager">Manager</option>
-                <option value="Admin">Admin</option>
               </select>
             </div>
 
-            {formData.role === 'Admin' && (
-              <Input 
-                label="Admin Secret Key" 
-                type="password" 
-                name="adminSecret" 
-                value={formData.adminSecret} 
-                onChange={handleChange} 
-                placeholder="Enter secret to register as Admin" 
-                required 
-              />
-            )}
+            <div style={{ marginBottom: '16px' }}>
+              <label htmlFor="register-centre" style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Centre</label>
+              <select id="register-centre" name="centreId" value={formData.centreId} onChange={handleChange} className="input-field" style={{ cursor: 'pointer' }} required>
+                <option value="" disabled>Choose your centre</option>
+                {centres.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+              </select>
+              {centres.length === 0 && <p style={{ fontSize: '0.8rem', marginTop: '6px' }}>No centres yet. Please try again later.</p>}
+            </div>
+
             
             {formData.role === 'Manager' && (
               <p style={{ fontSize: '0.85rem', color: 'var(--accent-warning)', marginBottom: '16px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px', borderRadius: '4px' }}>
-                Note: Manager accounts require Admin approval before you can log in.
+                Note: Manager accounts need approval from your centre's admin.
               </p>
             )}
 

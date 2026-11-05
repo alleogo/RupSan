@@ -10,6 +10,7 @@ import PreviousYatras from './pages/PreviousYatras';
 import YatraManagement from './pages/YatraManagement';
 import Ledger from './pages/Ledger';
 import Users from './pages/Users';
+import Centres from './pages/Centres';
 import { AuthProvider } from './context/AuthContext';
 import BackgroundDesign from './components/BackgroundDesign';
 import './index.css';
@@ -34,6 +35,7 @@ const AppContent = () => {
           <Route path="/yatra-management" element={<YatraManagement />} />
           <Route path="/ledger" element={<Ledger />} />
           <Route path="/users" element={<Users />} />
+          <Route path="/centres" element={<Centres />} />
         </Routes>
       </main>
     </div>
