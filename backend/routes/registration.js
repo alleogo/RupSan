@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { registerForYatra, updateRegistrationDetails, getYatraRegistrations, approveRegistration, getMyRegistrationStatus, getMyRegistrations } = require("../controllers/registration");
 const { auth, isManager } = require("../middlewares/auth");
+
 router.post("/register", auth, registerForYatra);
 router.put("/:registrationId/details", auth, isManager, updateRegistrationDetails);
 router.get("/my-registrations", auth, getMyRegistrations);
