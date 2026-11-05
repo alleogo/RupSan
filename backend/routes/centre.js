@@ -7,7 +7,7 @@ const validId = (req, res, next, value) => (mongoose.Types.ObjectId.isValid(valu
 router.param("id", validId);
 router.param("userId", validId);
 const {
-    listCentres, listCentresForSuperAdmin, createCentre, renameCentre, deleteCentre,
+    listCentres, listCentresForSuperAdmin, createCentre, updateCentre, deleteCentre, getCentreDetails,
     appointAdmin, changeAdminRole, changeUnassignedAdminRole, getMyCentre, addCoAdmin, removeCoAdmin
 } = require("../controllers/centre");
 const { auth, isAdmin, isSuperAdmin } = require("../middlewares/auth");
@@ -24,8 +24,11 @@ router.delete("/mine/co-admins/:userId", auth, isAdmin, removeCoAdmin);
 router.get("/manage", auth, isSuperAdmin, listCentresForSuperAdmin);
 router.post("/", auth, isSuperAdmin, createCentre);
 router.put("/unassigned-admins/:userId/role", auth, isSuperAdmin, changeUnassignedAdminRole);
-router.put("/:id", auth, isSuperAdmin, renameCentre);
+router.put("/:id", auth, isSuperAdmin, updateCentre);
 router.delete("/:id", auth, isSuperAdmin, deleteCentre);
+
+// Members of the centre and the Super Admin
+router.get("/:id/details", auth, getCentreDetails);
 router.put("/:id/admin", auth, isSuperAdmin, appointAdmin);
 router.put("/:id/admin/role", auth, isSuperAdmin, changeAdminRole);
 

@@ -8,7 +8,7 @@ import ManagerAccessRequests from '../components/ManagerAccessRequests';
 import AadharCardLink from '../components/AadharCardLink';
 import SuperAdminHome from '../components/SuperAdminHome';
 import { canManageYatra, visibilityLabel } from '../utils/yatraAccess';
-import ImageCropper, { YATRA_CARD_ASPECT, YATRA_CARD_ASPECT_CSS } from '../components/ImageCropper';
+import { YATRA_CARD_ASPECT_CSS } from '../components/ImageCropper';
 
 const Dashboard = () => {
   const [ledgerSummary, setLedgerSummary] = useState({ totalIncome: 0, totalExpense: 0, balance: 0 });
@@ -18,9 +18,6 @@ const Dashboard = () => {
   const [myRegistrations, setMyRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState(null);
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const [editingThumbnailType, setEditingThumbnailType] = useState('');
-  const [cropperImageSrc, setCropperImageSrc] = useState(null);
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -64,32 +61,6 @@ const Dashboard = () => {
       const res = await userApi.verify(userId, action);
       if (res.data.success) setUnverifiedUsers(unverifiedUsers.filter(u => u._id !== userId));
     } catch { alert("Failed to update user"); }
-  };
-
-  const handleFileSelect = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => setCropperImageSrc(ev.target.result);
-    reader.readAsDataURL(file);
-  };
-
-  const handleUpdateThumbnail = async (croppedBlob) => {
-    if (!croppedBlob) return;
-    try {
-      const formData = new FormData();
-      const filename = editingThumbnailType + '-thumbnail.jpg';
-      if (editingThumbnailType === 'accounts') formData.append('accountsThumbnail', croppedBlob, filename);
-      if (editingThumbnailType === 'yatra') formData.append('yatraThumbnail', croppedBlob, filename);
-      const res = await settingsApi.update(formData);
-      if (res.data.success) {
-        setSettings(res.data.settings);
-        setIsSettingsModalOpen(false);
-        setCropperImageSrc(null);
-      }
-    } catch (error) {
-      alert("Failed to update thumbnail");
-    }
   };
 
   const handleApproveManager = async (managerId, action) => {
@@ -196,9 +167,6 @@ const Dashboard = () => {
                 <div className="section-card-body" style={{ padding: '32px', flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
                     <h2 style={{ fontSize: '1.6rem' }}>Accounts Management</h2>
-                    {user?.role === 'Admin' && (
-                      <Button variant="default" style={{ padding: '6px 12px', fontSize: '0.8rem', width: 'auto' }} onClick={() => { setEditingThumbnailType('accounts'); setIsSettingsModalOpen(true); }}>Edit Image</Button>
-                    )}
                   </div>
                   <div className="stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '16px', marginBottom: '28px' }}>
                     <div style={{ background: 'rgba(16,185,129,0.1)', borderLeft: '4px solid var(--accent-success)', padding: '16px', borderRadius: '8px' }}>
@@ -231,9 +199,6 @@ const Dashboard = () => {
                 <div className="section-card-body" style={{ padding: '32px', flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
                     <h2 style={{ fontSize: '1.6rem' }}>Yatra Management</h2>
-                    {user?.role === 'Admin' && (
-                      <Button variant="default" style={{ padding: '6px 12px', fontSize: '0.8rem', width: 'auto' }} onClick={() => { setEditingThumbnailType('yatra'); setIsSettingsModalOpen(true); }}>Edit Image</Button>
-                    )}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '16px', marginBottom: '28px' }}>
                     <div style={{ background: 'rgba(99,102,241,0.1)', padding: '16px', borderRadius: '8px', textAlign: 'center' }}>
@@ -327,33 +292,6 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Settings Modal for Thumbnails */}
-      {isSettingsModalOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', zIndex: 1000, backdropFilter: 'blur(4px)', overflowY: 'auto', padding: '40px 20px' }}>
-          <div className="animate-fade-in" style={{ width: '100%', maxWidth: '640px', margin: 'auto' }}>
-            {cropperImageSrc ? (
-              <ImageCropper
-                aspect={YATRA_CARD_ASPECT}
-                imageSrc={cropperImageSrc}
-                onCrop={(blob) => handleUpdateThumbnail(blob)}
-                onCancel={() => { setCropperImageSrc(null); setIsSettingsModalOpen(false); }}
-              />
-            ) : (
-              <div style={{ background: 'var(--bg-secondary)', padding: '24px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--glass-border)' }}>
-                <h2 style={{ marginBottom: '16px' }}>Update Thumbnail</h2>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '20px' }}>
-                  Select a high-resolution image. You'll be able to drag and zoom to choose the exact portion to display.
-                </p>
-                <div style={{ marginBottom: '24px' }}>
-                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem' }}>Select Image</label>
-                  <input type="file" accept="image/*" className="input-field" onChange={handleFileSelect} />
-                </div>
-                <Button variant="default" onClick={() => setIsSettingsModalOpen(false)} style={{ width: '100%' }}>Cancel</Button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </>
   );
 };

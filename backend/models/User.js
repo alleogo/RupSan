@@ -39,12 +39,6 @@ const userSchema = new mongoose.Schema({
             return "Approved";
         }
     },
-    // Legacy: no longer collected (replaced by aadharCard)
-    aadharNumber: {
-        type: String,
-        trim: true,
-        default: null
-    },
     // Private Cloudinary image of the Aadhaar card; only viewable through signed links for admins
     aadharCard: {
         publicId: { type: String, default: null },
@@ -52,12 +46,6 @@ const userSchema = new mongoose.Schema({
         uploadedAt: { type: Date, default: null }
     },
     phoneNumber: {
-        type: String,
-        trim: true,
-        default: null
-    },
-    // Legacy free-text centre from before centres were a managed list (kept for reference only)
-    centre: {
         type: String,
         trim: true,
         default: null

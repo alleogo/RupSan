@@ -5,7 +5,7 @@ import Input from '../components/Input';
 import Button from '../components/Button';
 import api, { settingsApi, getImageUrl, centreApi, userApi } from '../utils/api';
 import AadharCardLink from '../components/AadharCardLink';
-import ImageCropper from '../components/ImageCropper';
+import ImageCropper, { YATRA_CARD_ASPECT, YATRA_CARD_ASPECT_CSS } from '../components/ImageCropper';
 import ManagerAccessCard from '../components/ManagerAccessCard';
 
 const Profile = () => {
@@ -19,6 +19,14 @@ const Profile = () => {
   });
   const [centres, setCentres] = useState([]);
   const [uploadingCard, setUploadingCard] = useState(false);
+  const [centreDetails, setCentreDetails] = useState(null);
+  const myCentreId = user?.centreId?._id || user?.centreId || '';
+
+  // Details of the user's own centre (description, location, project manager)
+  useEffect(() => {
+    if (!myCentreId) { setCentreDetails(null); return; }
+    centreApi.details(myCentreId).then(res => setCentreDetails(res.data.centre)).catch(() => setCentreDetails(null));
+  }, [myCentreId]);
 
   useEffect(() => {
     centreApi.list().then(res => { if (res.data.success) setCentres(res.data.centres); }).catch(() => {});
@@ -29,6 +37,7 @@ const Profile = () => {
   const [settings, setSettings] = useState(null);
   const [navbarSettings, setNavbarSettings] = useState({ title: '', logoText: '' });
   const [cropperImageSrc, setCropperImageSrc] = useState(null);
+  const [bannerCrop, setBannerCrop] = useState(null); // { field, src } while cropping a dashboard image
 
   // We need to fetch the latest user info from DB to get these fields,
   // or they might be in `user` from AuthContext if we update it.
@@ -44,7 +53,7 @@ const Profile = () => {
         centreId: user.centreId?._id || user.centreId || ''
       });
     }
-    if (user?.role === 'Admin' || user?.role === 'SuperAdmin') {
+    if (user?.role === 'SuperAdmin') {
       const fetchSettings = async () => {
         try {
           const res = await settingsApi.get();
@@ -108,6 +117,26 @@ const Profile = () => {
       console.error('Logo upload error:', error.response?.data || error.message || error);
       const errMsg = error.response?.data?.message || 'Failed to update logo';
       setMsg({ text: errMsg, type: 'error' });
+    }
+    setLoading(false);
+  };
+
+  // Super Admin: change a dashboard image (5:2, same shape as the cards that show it)
+  const handleUpdateBanner = async (field, blob) => {
+    if (!blob) return;
+    setLoading(true);
+    setMsg({ text: '', type: '' });
+    try {
+      const formData = new FormData();
+      formData.append(field, blob, `${field}.jpg`);
+      const res = await settingsApi.update(formData);
+      if (res.data.success) {
+        setSettings(res.data.settings);
+        setBannerCrop(null);
+        setMsg({ text: 'Dashboard image updated.', type: 'success' });
+      }
+    } catch (error) {
+      setMsg({ text: error.response?.data?.message || 'Could not update the image.', type: 'error' });
     }
     setLoading(false);
   };
@@ -231,11 +260,14 @@ const Profile = () => {
           </div>
           <Input label="Email Address" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="email@example.com" />
           <Input label="Phone Number" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} placeholder="+91 9876543210" />
+          {/* The Super Admin doesn't belong to a centre and isn't verified */}
+          {user.role !== 'SuperAdmin' && (
+          <>
           <div style={{ marginBottom: '16px' }}>
             <label htmlFor="profile-centre" style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Centre</label>
             <select id="profile-centre" name="centreId" value={formData.centreId} onChange={handleChange} className="input-field" disabled={!canPickCentre} style={{ cursor: canPickCentre ? 'pointer' : 'not-allowed' }}>
               <option value="">Choose your centre</option>
-              {centres.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+              {centres.map(c => <option key={c._id} value={c._id}>{c.name}{c.place ? ` — ${c.place}` : ''}</option>)}
             </select>
             {isParticipant && formData.centreId && formData.centreId !== savedCentreId && savedCentreId && (
               <p style={{ fontSize: '0.8rem', marginTop: '6px', color: 'var(--accent-warning)' }}>Changing your centre means the new centre's admin has to verify you again.</p>
@@ -262,6 +294,8 @@ const Profile = () => {
             </div>
             <p style={{ fontSize: '0.8rem', marginTop: '6px' }}>A clear photo of the front of your card. Only your centre's admins can see it.</p>
           </div>
+          </>
+          )}
           
           <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
             <Button type="submit" disabled={loading}>Update Details</Button>
@@ -283,9 +317,31 @@ const Profile = () => {
         )}
       </Card>
 
+      {centreDetails && (
+        <Card style={{ marginTop: '24px' }}>
+          <h3 style={{ marginBottom: '4px' }}>Your centre: {centreDetails.name}</h3>
+          {centreDetails.place && <p style={{ fontSize: '0.9rem', marginBottom: '8px' }}>{centreDetails.place}</p>}
+          {centreDetails.description && <p style={{ marginBottom: '12px' }}>{centreDetails.description}</p>}
+          {centreDetails.location && (
+            <p style={{ fontSize: '0.9rem', marginBottom: '8px' }}>
+              📍 {centreDetails.location} ·{' '}
+              <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([centreDetails.location, centreDetails.place].filter(Boolean).join(', '))}`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-primary)' }}>View on map</a>
+            </p>
+          )}
+          {centreDetails.pm?.name && (
+            <p style={{ fontSize: '0.9rem', marginBottom: '8px' }}>
+              Project manager: <span style={{ color: 'var(--text-primary)' }}>{centreDetails.pm.name}</span>
+              {centreDetails.pm.phone && <> · <a href={`tel:${centreDetails.pm.phone}`} style={{ color: 'var(--accent-primary)' }}>{centreDetails.pm.phone}</a></>}
+              {centreDetails.pm.email && <> · <a href={`mailto:${centreDetails.pm.email}`} style={{ color: 'var(--accent-primary)' }}>{centreDetails.pm.email}</a></>}
+            </p>
+          )}
+          {centreDetails.admin && <p style={{ fontSize: '0.9rem' }}>Admin: <span style={{ color: 'var(--text-primary)' }}>{centreDetails.admin.firstName} {centreDetails.admin.lastName}</span></p>}
+        </Card>
+      )}
+
       <ManagerAccessCard />
 
-      {(user.role === 'Admin' || user.role === 'SuperAdmin') && (
+      {user.role === 'SuperAdmin' && (
         <Card style={{ marginTop: '24px' }}>
           <h3 style={{ marginBottom: '20px' }}>Global Settings</h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '16px' }}>Customize the Navbar logo and title displayed across the app.</p>
@@ -321,6 +377,43 @@ const Profile = () => {
               <Button type="submit" disabled={loading}>Update Navbar Settings</Button>
             </div>
           </form>
+
+          <div style={{ marginTop: '24px', background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
+            <h4 style={{ marginBottom: '4px' }}>Dashboard images</h4>
+            <p style={{ fontSize: '0.85rem', marginBottom: '16px' }}>Shown on every admin's and manager's dashboard.</p>
+            {bannerCrop ? (
+              <ImageCropper
+                aspect={YATRA_CARD_ASPECT}
+                imageSrc={bannerCrop.src}
+                onCrop={(blob) => handleUpdateBanner(bannerCrop.field, blob)}
+                onCancel={() => setBannerCrop(null)}
+              />
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: '16px' }}>
+                {[['accountsThumbnail', 'Accounts Management'], ['yatraThumbnail', 'Yatra Management']].map(([field, label]) => (
+                  <div key={field}>
+                    <div style={{ width: '100%', aspectRatio: YATRA_CARD_ASPECT_CSS, borderRadius: '8px', overflow: 'hidden', background: 'rgba(255,255,255,0.05)', marginBottom: '8px' }}>
+                      {settings?.[field] && <img src={getImageUrl(settings[field], 600)} alt={label} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>{label}</span>
+                      <label style={{ fontSize: '0.85rem', color: 'var(--accent-primary)', cursor: 'pointer', textDecoration: 'underline' }}>
+                        Change
+                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => {
+                          const file = e.target.files[0];
+                          e.target.value = null;
+                          if (!file) return;
+                          const reader = new FileReader();
+                          reader.onload = (ev) => setBannerCrop({ field, src: ev.target.result });
+                          reader.readAsDataURL(file);
+                        }} />
+                      </label>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </Card>
       )}
     </div>

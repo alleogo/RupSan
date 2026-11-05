@@ -138,7 +138,7 @@ exports.listRequests = async (req, res) => {
         const requests = await RoleRequest.find(filter)
             .sort({ createdAt: status === "Pending" ? 1 : -1 })
             .limit(100)
-            .populate("user", "firstName lastName email phoneNumber centre role verificationStatus tempManagerFrom tempManagerUntil")
+            .populate("user", "firstName lastName email phoneNumber centreId role verificationStatus tempManagerFrom tempManagerUntil")
             .populate("reviewedBy", "firstName lastName");
 
         return res.status(200).json({ success: true, requests });

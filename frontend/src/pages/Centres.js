@@ -124,24 +124,69 @@ const ChangeRoleDialog = ({ title, text, onSubmit, onClose }) => {
   );
 };
 
-const CentreCard = ({ centre, onChanged, onAppoint, onChangeAdminRole }) => {
-  const [editing, setEditing] = useState(false);
-  const [name, setName] = useState(centre.name);
-  const [error, setError] = useState('');
-  const total = centre.members.Admin + centre.members.Manager + centre.members.Participant;
-  const isEmpty = total === 0 && centre.yatras === 0 && centre.entries === 0;
+const EMPTY_CENTRE = { name: '', description: '', place: '', location: '', pm: { name: '', phone: '', email: '' } };
+const mapLink = (location, place) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([location, place].filter(Boolean).join(', '))}`;
 
-  const rename = async (e) => {
+// Add or edit a centre's details
+const CentreFormDialog = ({ centre, onClose, onDone }) => {
+  const [form, setForm] = useState(centre ? {
+    name: centre.name, description: centre.description || '', place: centre.place || '', location: centre.location || '',
+    pm: { name: centre.pm?.name || '', phone: centre.pm?.phone || '', email: centre.pm?.email || '' }
+  } : EMPTY_CENTRE);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const set = (key, value) => setForm(f => ({ ...f, [key]: value }));
+  const setPm = (key, value) => setForm(f => ({ ...f, pm: { ...f.pm, [key]: value } }));
+
+  const submit = async (e) => {
     e.preventDefault();
+    setBusy(true);
     setError('');
     try {
-      const res = await centreApi.rename(centre._id, name);
-      setEditing(false);
-      onChanged(res.data.message);
+      const res = centre ? await centreApi.update(centre._id, form) : await centreApi.create(form);
+      onDone(res.data.message);
     } catch (err) {
-      setError(err.response?.data?.message || 'Could not rename the centre.');
+      setError(err.response?.data?.message || 'Could not save the centre.');
+      setBusy(false);
     }
   };
+
+  const grid = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '0 12px' };
+  const field = (id, label, input) => (
+    <div style={{ marginBottom: '12px' }}>
+      <label style={labelStyle} htmlFor={id}>{label}</label>
+      {input}
+    </div>
+  );
+
+  return (
+    <Modal title={centre ? `Edit ${centre.name}` : 'Add a centre'} onClose={onClose} busy={busy}>
+      <form onSubmit={submit}>
+        <div style={grid}>
+          {field('centre-name', 'Centre name *', <input id="centre-name" value={form.name} onChange={(e) => set('name', e.target.value)} className="input-field" maxLength={100} required autoFocus />)}
+          {field('centre-place', 'City / town / village', <input id="centre-place" value={form.place} onChange={(e) => set('place', e.target.value)} className="input-field" maxLength={100} />)}
+        </div>
+        {field('centre-location', 'Location (address or directions)', <input id="centre-location" value={form.location} onChange={(e) => set('location', e.target.value)} className="input-field" maxLength={300} placeholder="e.g. Near ISKCON temple, Raman Reti" />)}
+        {field('centre-description', 'Description', <textarea id="centre-description" value={form.description} onChange={(e) => set('description', e.target.value)} className="input-field" rows="3" maxLength={1000} />)}
+        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '4px 0 8px' }}>Project manager (PM)</p>
+        <div style={grid}>
+          {field('pm-name', 'Name', <input id="pm-name" value={form.pm.name} onChange={(e) => setPm('name', e.target.value)} className="input-field" maxLength={100} />)}
+          {field('pm-phone', 'Phone', <input id="pm-phone" type="tel" value={form.pm.phone} onChange={(e) => setPm('phone', e.target.value)} className="input-field" maxLength={20} />)}
+          {field('pm-email', 'Email', <input id="pm-email" type="email" value={form.pm.email} onChange={(e) => setPm('email', e.target.value)} className="input-field" maxLength={100} />)}
+        </div>
+        {error && <p role="alert" style={{ color: 'var(--accent-danger)', fontSize: '0.9rem', marginBottom: '12px' }}>{error}</p>}
+        <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+          <Button variant="default" onClick={onClose} disabled={busy} style={{ flex: 1 }}>Cancel</Button>
+          <Button type="submit" disabled={busy} style={{ flex: 1 }}>{busy ? 'Saving…' : centre ? 'Save changes' : 'Add centre'}</Button>
+        </div>
+      </form>
+    </Modal>
+  );
+};
+
+const CentreCard = ({ centre, onChanged, onEdit, onAppoint, onChangeAdminRole }) => {
+  const total = centre.members.Admin + centre.members.Manager + centre.members.Participant;
+  const isEmpty = total === 0 && centre.yatras === 0 && centre.entries === 0;
 
   const remove = async () => {
     if (!window.confirm(`Delete the centre "${centre.name}"? This cannot be undone.`)) return;
@@ -155,24 +200,30 @@ const CentreCard = ({ centre, onChanged, onAppoint, onChangeAdminRole }) => {
 
   return (
     <Card>
-      {editing ? (
-        <form onSubmit={rename} style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
-          <input value={name} onChange={(e) => setName(e.target.value)} className="input-field" style={{ flex: '1 1 180px', width: 'auto' }} aria-label="Centre name" autoFocus required maxLength={100} />
-          <Button type="submit" style={{ width: 'auto', padding: '8px 14px' }}>Save</Button>
-          <Button variant="default" onClick={() => { setEditing(false); setName(centre.name); setError(''); }} style={{ width: 'auto', padding: '8px 14px' }}>Cancel</Button>
-        </form>
-      ) : (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '4px' }}>
+        <div style={{ minWidth: 0 }}>
           <h3 style={{ overflowWrap: 'anywhere' }}>{centre.name}</h3>
-          <div style={{ display: 'flex', flexShrink: 0 }}>
-            <button type="button" onClick={() => setEditing(true)} style={{ ...linkButton, color: 'var(--accent-primary)' }}>Rename</button>
-            <button type="button" onClick={remove} disabled={!isEmpty} title={isEmpty ? 'Delete this centre' : 'Only empty centres can be deleted'} style={{ ...linkButton, color: isEmpty ? 'var(--accent-danger)' : 'var(--text-secondary)', cursor: isEmpty ? 'pointer' : 'not-allowed' }}>Delete</button>
-          </div>
+          {centre.place && <p style={{ fontSize: '0.85rem' }}>{centre.place}</p>}
         </div>
-      )}
-      {error && <p role="alert" style={{ color: 'var(--accent-danger)', fontSize: '0.85rem', marginBottom: '8px' }}>{error}</p>}
+        <div style={{ display: 'flex', flexShrink: 0 }}>
+          <button type="button" onClick={() => onEdit(centre)} style={{ ...linkButton, color: 'var(--accent-primary)' }}>Edit</button>
+          <button type="button" onClick={remove} disabled={!isEmpty} title={isEmpty ? 'Delete this centre' : 'Only empty centres can be deleted'} style={{ ...linkButton, color: isEmpty ? 'var(--accent-danger)' : 'var(--text-secondary)', cursor: isEmpty ? 'pointer' : 'not-allowed' }}>Delete</button>
+        </div>
+      </div>
 
-      <p style={{ fontSize: '0.85rem', marginBottom: '14px' }}>
+      {centre.description && <p style={{ fontSize: '0.9rem', margin: '8px 0', overflowWrap: 'anywhere' }}>{centre.description}</p>}
+      {centre.location && (
+        <p style={{ fontSize: '0.85rem', marginBottom: '8px', overflowWrap: 'anywhere' }}>
+          📍 {centre.location} · <a href={mapLink(centre.location, centre.place)} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-primary)' }}>View on map</a>
+        </p>
+      )}
+      {centre.pm?.name && (
+        <p style={{ fontSize: '0.85rem', marginBottom: '8px', overflowWrap: 'anywhere' }}>
+          PM: <span style={{ color: 'var(--text-primary)' }}>{centre.pm.name}</span>{centre.pm.phone ? ` · ${centre.pm.phone}` : ''}{centre.pm.email ? ` · ${centre.pm.email}` : ''}
+        </p>
+      )}
+
+      <p style={{ fontSize: '0.85rem', margin: '8px 0 14px' }}>
         {total} member{total === 1 ? '' : 's'}: {centre.members.Admin} admin{centre.members.Admin === 1 ? '' : 's'} · {centre.members.Manager} manager{centre.members.Manager === 1 ? '' : 's'} · {centre.members.Participant} participant{centre.members.Participant === 1 ? '' : 's'}
         {centre.yatras ? ` · ${centre.yatras} yatra${centre.yatras === 1 ? '' : 's'}` : ''}
       </p>
@@ -207,10 +258,7 @@ const Centres = () => {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loadError, setLoadError] = useState('');
-  const [newName, setNewName] = useState('');
-  const [adding, setAdding] = useState(false);
   const [notice, setNotice] = useState('');
-  const [error, setError] = useState('');
   const [dialog, setDialog] = useState(null);
 
   const load = useCallback(() => {
@@ -228,22 +276,7 @@ const Centres = () => {
   const done = (message) => {
     setDialog(null);
     setNotice(message);
-    setError('');
     load();
-  };
-
-  const addCentre = async (e) => {
-    e.preventDefault();
-    setAdding(true);
-    setError('');
-    try {
-      const res = await centreApi.create(newName);
-      setNewName('');
-      done(res.data.message);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Could not add the centre.');
-    }
-    setAdding(false);
   };
 
   return (
@@ -253,16 +286,9 @@ const Centres = () => {
 
       {notice && <p role="status" style={{ background: 'rgba(16,185,129,0.12)', color: 'var(--accent-success)', padding: '10px 14px', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '0.9rem' }}>✓ {notice}</p>}
 
-      <Card style={{ marginBottom: '24px' }}>
-        <form onSubmit={addCentre} style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-          <div style={{ flex: '1 1 260px' }}>
-            <label style={labelStyle} htmlFor="new-centre">Add a centre</label>
-            <input id="new-centre" value={newName} onChange={(e) => setNewName(e.target.value)} className="input-field" placeholder="Centre name" maxLength={100} required />
-          </div>
-          <Button type="submit" disabled={adding} style={{ width: 'auto', padding: '11px 20px' }}>{adding ? 'Adding…' : '+ Add centre'}</Button>
-        </form>
-        {error && <p role="alert" style={{ color: 'var(--accent-danger)', fontSize: '0.9rem', marginTop: '10px' }}>{error}</p>}
-      </Card>
+      <div style={{ marginBottom: '24px' }}>
+        <Button onClick={() => setDialog({ type: 'form', centre: null })} style={{ width: 'auto', padding: '10px 20px' }}>+ Add centre</Button>
+      </div>
 
       {loadError ? (
         <Card><p role="alert" style={{ color: 'var(--accent-danger)', marginBottom: '12px' }}>{loadError}</p><Button variant="default" onClick={load} style={{ width: 'auto' }}>Try again</Button></Card>
@@ -299,17 +325,18 @@ const Centres = () => {
           )}
 
           {data.centres.length === 0 ? (
-            <Card><p>No centres yet. Add the first one above.</p></Card>
+            <Card><p>No centres yet. Add the first one with "+ Add centre".</p></Card>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))', gap: '20px' }}>
               {data.centres.map(c => (
-                <CentreCard key={c._id} centre={c} onChanged={done} onAppoint={(centre) => setDialog({ type: 'appoint', centre })} onChangeAdminRole={(centre) => setDialog({ type: 'adminRole', centre })} />
+                <CentreCard key={c._id} centre={c} onChanged={done} onEdit={(centre) => setDialog({ type: 'form', centre })} onAppoint={(centre) => setDialog({ type: 'appoint', centre })} onChangeAdminRole={(centre) => setDialog({ type: 'adminRole', centre })} />
               ))}
             </div>
           )}
         </>
       )}
 
+      {dialog?.type === 'form' && <CentreFormDialog centre={dialog.centre} onClose={() => setDialog(null)} onDone={done} />}
       {dialog?.type === 'appoint' && <AppointAdminDialog centre={dialog.centre} onClose={() => setDialog(null)} onDone={done} />}
       {dialog?.type === 'adminRole' && (
         <ChangeRoleDialog

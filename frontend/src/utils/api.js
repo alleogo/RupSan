@@ -91,8 +91,9 @@ export const centreApi = {
   list: () => api.get('/centres'),
   // Super Admin
   manage: () => api.get('/centres/manage'),
-  create: (name) => api.post('/centres', { name }),
-  rename: (id, name) => api.put(`/centres/${id}`, { name }),
+  create: (fields) => api.post('/centres', fields), // { name, description, place, location, pm: { name, phone, email } }
+  update: (id, fields) => api.put(`/centres/${id}`, fields),
+  details: (id) => api.get(`/centres/${id}/details`), // members of the centre and the Super Admin
   remove: (id) => api.delete(`/centres/${id}`),
   appointAdmin: (id, userId, previousAdminRole) => api.put(`/centres/${id}/admin`, { userId, previousAdminRole }),
   changeAdminRole: (id, role) => api.put(`/centres/${id}/admin/role`, { role }),

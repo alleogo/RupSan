@@ -50,10 +50,26 @@ const setMemberRole = async (userId, role) => {
 
 const email = (user, subject, body) => mailSender(user.email, subject, `<p>Dear ${escapeHtml(user.firstName)},</p>${body}<p>Thank you!</p>`);
 
-// Public: names for the centre dropdown
+// Centre details sent by the Super Admin (name is required; the rest is optional)
+const readCentreFields = (body) => {
+    const text = (value, max) => String(value || "").trim().slice(0, max);
+    const pm = body.pm || {};
+    const fields = {
+        name: text(body.name, 100),
+        description: text(body.description, 1000),
+        place: text(body.place, 100),
+        location: text(body.location, 300),
+        pm: { name: text(pm.name, 100), phone: text(pm.phone, 20), email: text(pm.email, 100).toLowerCase() }
+    };
+    if (!fields.name) return { error: "Enter a centre name" };
+    if (fields.pm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.pm.email)) return { error: "Enter a valid email for the project manager" };
+    return { fields };
+};
+
+// Public: names (and town) for the centre dropdown; contact details are not public
 exports.listCentres = async (req, res) => {
     try {
-        const centres = await Centre.find().select("name").sort({ nameKey: 1 });
+        const centres = await Centre.find().select("name place").sort({ nameKey: 1 });
         return res.status(200).json({ success: true, centres });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
@@ -90,9 +106,9 @@ exports.listCentresForSuperAdmin = async (req, res) => {
 
 exports.createCentre = async (req, res) => {
     try {
-        const name = String(req.body.name || "").trim();
-        if (!name) return res.status(400).json({ success: false, message: "Enter a centre name" });
-        const centre = await Centre.create({ name });
+        const { fields, error } = readCentreFields(req.body);
+        if (error) return res.status(400).json({ success: false, message: error });
+        const centre = await Centre.create(fields);
         return res.status(201).json({ success: true, message: `Centre "${centre.name}" added`, centre });
     } catch (error) {
         if (error.code === 11000) return res.status(409).json({ success: false, message: "A centre with this name already exists" });
@@ -100,16 +116,16 @@ exports.createCentre = async (req, res) => {
     }
 };
 
-// Renaming updates every member automatically, since members reference the centre
-exports.renameCentre = async (req, res) => {
+// Update a centre's details. Renaming updates every member automatically, since members reference the centre
+exports.updateCentre = async (req, res) => {
     try {
-        const name = String(req.body.name || "").trim();
-        if (!name) return res.status(400).json({ success: false, message: "Enter a centre name" });
+        const { fields, error } = readCentreFields(req.body);
+        if (error) return res.status(400).json({ success: false, message: error });
         const centre = await Centre.findById(req.params.id);
         if (!centre) return res.status(404).json({ success: false, message: "Centre not found" });
-        centre.name = name;
+        Object.assign(centre, fields);
         await centre.save();
-        return res.status(200).json({ success: true, message: `Centre renamed to "${centre.name}"`, centre });
+        return res.status(200).json({ success: true, message: `"${centre.name}" updated`, centre });
     } catch (error) {
         if (error.code === 11000) return res.status(409).json({ success: false, message: "A centre with this name already exists" });
         return res.status(500).json({ success: false, message: error.message });
@@ -205,6 +221,20 @@ exports.changeUnassignedAdminRole = async (req, res) => {
         if (!user || user.role !== "Admin" || user.centreId) return res.status(400).json({ success: false, message: "This user is not an admin without a centre" });
         await setMemberRole(user._id, role);
         return res.status(200).json({ success: true, message: `${user.firstName} is now a ${role.toLowerCase()}. They can choose their centre from their profile.` });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// A centre's full details (with the project manager's contact): its members and the Super Admin
+exports.getCentreDetails = async (req, res) => {
+    try {
+        if (req.user.role !== "SuperAdmin" && req.user.centreId !== String(req.params.id)) {
+            return res.status(404).json({ success: false, message: "Centre not found" });
+        }
+        const centre = await Centre.findById(req.params.id).select("name description place location pm admin").populate("admin", "firstName lastName email phoneNumber");
+        if (!centre) return res.status(404).json({ success: false, message: "Centre not found" });
+        return res.status(200).json({ success: true, centre });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
     }

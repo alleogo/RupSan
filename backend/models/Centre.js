@@ -10,6 +10,32 @@ const centreSchema = new mongoose.Schema({
         trim: true,
         maxlength: 100
     },
+    description: {
+        type: String,
+        trim: true,
+        maxlength: 1000,
+        default: ""
+    },
+    // City, town or village
+    place: {
+        type: String,
+        trim: true,
+        maxlength: 100,
+        default: ""
+    },
+    // Address or directions (the app links it to a map search)
+    location: {
+        type: String,
+        trim: true,
+        maxlength: 300,
+        default: ""
+    },
+    // Project manager: a contact, who doesn't need an account
+    pm: {
+        name: { type: String, trim: true, maxlength: 100, default: "" },
+        phone: { type: String, trim: true, maxlength: 20, default: "" },
+        email: { type: String, trim: true, lowercase: true, maxlength: 100, default: "" }
+    },
     // Lower-cased name, so "Vrindavan" and "vrindavan " can't both exist
     nameKey: {
         type: String,

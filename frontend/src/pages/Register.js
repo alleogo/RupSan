@@ -109,7 +109,7 @@ const Register = () => {
               <label htmlFor="register-centre" style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Centre</label>
               <select id="register-centre" name="centreId" value={formData.centreId} onChange={handleChange} className="input-field" style={{ cursor: 'pointer' }} required>
                 <option value="" disabled>Choose your centre</option>
-                {centres.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                {centres.map(c => <option key={c._id} value={c._id}>{c.name}{c.place ? ` — ${c.place}` : ''}</option>)}
               </select>
               {centres.length === 0 && <p style={{ fontSize: '0.8rem', marginTop: '6px' }}>No centres yet. Please try again later.</p>}
             </div>
