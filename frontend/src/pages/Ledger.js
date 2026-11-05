@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import Card from '../components/Card';
 import Button from '../components/Button';
@@ -284,16 +284,24 @@ const Ledger = () => {
     SuperAdmin: 'View only (Super Admin): you can restore deleted entries'
   }[perms.level];
 
-  const pageMessage = (title, text) => (
+  const pageMessage = (title, text, action) => (
     <div className="animate-fade-in" style={{ padding: '24px', maxWidth: '700px', margin: '40px auto', textAlign: 'center' }}>
       <h1 style={{ fontSize: '1.6rem', marginBottom: '8px' }}>{title}</h1>
-      <p>{text}</p>
+      <p style={{ marginBottom: action ? '20px' : 0 }}>{text}</p>
+      {action && <Link to={action.to} className="btn btn-primary" style={{ display: 'inline-block', width: 'auto', padding: '10px 20px', textDecoration: 'none' }}>{action.label}</Link>}
     </div>
   );
   if (accessError) return pageMessage('Ledger', accessError);
   if (!access) return pageMessage('Ledger', 'Loading…');
-  if (!perms.canView) return pageMessage('No account access', "You don't have access to your centre's account. Your centre's admin can share it with you.");
-  if (isSuperAdmin && !(access.centres || []).length) return pageMessage('Ledger', 'There are no centres yet, so there are no accounts to show.');
+  if (isSuperAdmin && !(access.centres || []).length) {
+    return pageMessage('No centre accounts yet', 'Each centre has its own account. Add your centres first, then come back here to view their accounts and move older ledger entries into them.', { to: '/centres', label: 'Go to Centres' });
+  }
+  if (!perms.canView) {
+    const hasCentre = Boolean(user?.centreId);
+    if (user?.role === 'Admin' && !hasCentre) return pageMessage('Not assigned to a centre yet', "Each centre has its own account. Once the Super Admin makes you a centre's admin, its account will appear here.");
+    if (!hasCentre) return pageMessage('Choose your centre first', "Each centre has its own account. Choose your centre on your profile; its admin can then share the account with you.", { to: '/profile', label: 'Go to Profile' });
+    return pageMessage('No account access', "You don't have access to your centre's account. Your centre's admin can share it with you.");
+  }
 
   return (
     <div className="animate-fade-in" style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto', paddingBottom: selectedList.length ? '180px' : '24px' }}>
