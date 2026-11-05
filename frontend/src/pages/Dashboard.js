@@ -31,7 +31,7 @@ const Dashboard = () => {
         const isManagerOrAdmin = user?.role === 'Admin' || user?.role === 'Manager';
         let summaryRes = null;
         if (isManagerOrAdmin) {
-          summaryRes = await transactionApi.getSummary().catch(() => null);
+          summaryRes = user?.accountLevel ? await transactionApi.getSummary().catch(() => null) : null;
         }
         const yatrasRes = await yatraApi.getAll();
         let usersRes = null, managersRes = null;
@@ -185,7 +185,8 @@ const Dashboard = () => {
             {/* Two big section cards side by side */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(420px, 100%), 1fr))', gap: '32px', marginBottom: '40px' }}>
 
-              {/* === ACCOUNTS MANAGEMENT CARD === */}
+              {/* === ACCOUNTS MANAGEMENT CARD (only with access to the centre's account) === */}
+              {user?.accountLevel && (
               <div style={{ background: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--glass-border)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                 <div className="section-card-image" style={{ width: '100%', aspectRatio: YATRA_CARD_ASPECT_CSS, minHeight: 0, overflow: 'hidden', background: 'linear-gradient(135deg,rgba(16,185,129,0.25),rgba(16,185,129,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {settings?.accountsThumbnail ? (
@@ -218,6 +219,7 @@ const Dashboard = () => {
                   </Link>
                 </div>
               </div>
+              )}
 
               {/* === YATRA MANAGEMENT CARD === */}
               <div style={{ background: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--glass-border)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>

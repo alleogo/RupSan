@@ -142,7 +142,7 @@ const Navbar = () => {
         <Link to="/previous-yatras" style={{ color: isActive('/previous-yatras'), textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '500', transition: 'var(--transition-fast)' }}>
           📜 Previous Yatras
         </Link>
-        {user && (user.role === 'Manager' || user.role === 'Admin') && (
+        {user?.accountLevel && (
           <Link to="/ledger" style={{ color: isActive('/ledger'), textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '500', transition: 'var(--transition-fast)' }}>
             💰 Ledger
           </Link>

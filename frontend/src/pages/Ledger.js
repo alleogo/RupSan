@@ -6,7 +6,11 @@ import Button from '../components/Button';
 import TransactionForm from '../components/ledger/TransactionForm';
 import MonthlyView from '../components/ledger/MonthlyView';
 import BreakdownView from '../components/ledger/BreakdownView';
-import { transactionApi, yatraApi, getMediaUrl } from '../utils/api';
+import EntryHistory from '../components/ledger/EntryHistory';
+import DeletedEntries from '../components/ledger/DeletedEntries';
+import AccountSharing from '../components/ledger/AccountSharing';
+import UnassignedEntries from '../components/ledger/UnassignedEntries';
+import { transactionApi, yatraApi, getMediaUrl, accountAccessApi } from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
 import {
   formatINR, PAYMENT_TYPES, ONLINE_METHODS, PERIOD_PRESETS, periodParams, periodLabel, toMonth, labelStyle, pillStyle
@@ -74,6 +78,16 @@ const Ledger = () => {
   const [form, setForm] = useState(null); // { transaction } while the add/edit form is open
   const [notice, setNotice] = useState('');
   const [exporting, setExporting] = useState(false);
+  const [historyEntry, setHistoryEntry] = useState(null);
+
+  // What this user can do with the account; the Super Admin chooses which centre's account to view
+  const [access, setAccess] = useState(null);
+  const [accessError, setAccessError] = useState('');
+  const [accountCentreId, setAccountCentreId] = useState('');
+  const isSuperAdmin = user?.role === 'SuperAdmin';
+  const perms = access?.permissions || {};
+  const ready = Boolean(perms.canView) && (!isSuperAdmin || Boolean(accountCentreId));
+  const accountName = isSuperAdmin ? (access?.centres || []).find(c => c._id === accountCentreId)?.name : access?.centre?.name;
 
   // Wait for typing to pause before searching
   useEffect(() => {
@@ -84,10 +98,11 @@ const Ledger = () => {
   // Filters shared by every tab (the monthly tab chooses its own year instead of the period)
   const filterParams = useMemo(() => {
     const params = {};
+    if (isSuperAdmin && accountCentreId) params.centreId = accountCentreId;
     if (debouncedSearch) params.search = debouncedSearch;
     Object.entries(filters).forEach(([key, value]) => { if (value !== '') params[key] = value; });
     return params;
-  }, [debouncedSearch, filters]);
+  }, [debouncedSearch, filters, isSuperAdmin, accountCentreId]);
 
   const queryParams = useMemo(() => ({ ...periodParams(period), ...filterParams }), [period, filterParams]);
   const queryKey = JSON.stringify(queryParams);
@@ -99,25 +114,29 @@ const Ledger = () => {
   }, [queryKey]);
 
   useEffect(() => {
-    if (!user || (user.role !== 'Admin' && user.role !== 'Manager')) {
-      navigate('/');
-      return;
-    }
+    if (!user) { navigate('/login'); return; }
+    accountAccessApi.me()
+      .then(res => {
+        setAccess(res.data);
+        if (res.data.centres?.length) setAccountCentreId(id => id || res.data.centres[0]._id);
+      })
+      .catch(err => setAccessError(err.response?.data?.message || 'Could not load your account access.'));
     yatraApi.getAll().then(res => { if (res.data.success) setYatras(res.data.yatras); }).catch(() => {});
   }, [user, navigate]);
 
   useEffect(() => {
-    transactionApi.getCategories()
+    if (!ready) return;
+    transactionApi.getCategories(isSuperAdmin ? { centreId: accountCentreId } : undefined)
       .then(res => {
         if (!res.data.success) return;
         setCategories(res.data.categories);
         setPaymentMethods(res.data.paymentMethods || []);
       })
       .catch(() => {});
-  }, [refreshKey]);
+  }, [refreshKey, ready, isSuperAdmin, accountCentreId]);
 
   useEffect(() => {
-    if (!user || (user.role !== 'Admin' && user.role !== 'Manager')) return;
+    if (!ready) return;
     let cancelled = false;
     setLoading(true);
     transactionApi.getAll({ ...JSON.parse(queryKey), ...sort, page, limit })
@@ -143,7 +162,7 @@ const Ledger = () => {
       .catch(err => console.error('Failed to fetch transactions:', err))
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [user, queryKey, sort, page, limit, refreshKey]);
+  }, [ready, queryKey, sort, page, limit, refreshKey]);
 
   useEffect(() => {
     if (!notice) return;
@@ -256,22 +275,48 @@ const Ledger = () => {
   const expense = stats?.expense || { total: 0, count: 0, avg: 0, min: 0, max: 0 };
   const net = stats?.net || 0;
   const periodName = periodLabel(period);
+  const userId = String(user?._id || user?.id);
+  const canChange = (t) => perms.canEditAll || (perms.canEditOwn && String(t.recordedBy?._id || t.recordedBy) === userId);
+  const levelText = {
+    Admin: 'Full access (admin)',
+    Editor: 'Editor: you can add entries and change your own',
+    Viewer: 'View only',
+    SuperAdmin: 'View only (Super Admin): you can restore deleted entries'
+  }[perms.level];
+
+  const pageMessage = (title, text) => (
+    <div className="animate-fade-in" style={{ padding: '24px', maxWidth: '700px', margin: '40px auto', textAlign: 'center' }}>
+      <h1 style={{ fontSize: '1.6rem', marginBottom: '8px' }}>{title}</h1>
+      <p>{text}</p>
+    </div>
+  );
+  if (accessError) return pageMessage('Ledger', accessError);
+  if (!access) return pageMessage('Ledger', 'Loading…');
+  if (!perms.canView) return pageMessage('No account access', "You don't have access to your centre's account. Your centre's admin can share it with you.");
+  if (isSuperAdmin && !(access.centres || []).length) return pageMessage('Ledger', 'There are no centres yet, so there are no accounts to show.');
 
   return (
     <div className="animate-fade-in" style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto', paddingBottom: selectedList.length ? '180px' : '24px' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', flexWrap: 'wrap', marginBottom: '24px' }}>
         <div>
-          <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>Ledger</h1>
-          <p>Track income and expenses, month by month</p>
+          <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>{accountName ? `${accountName} Account` : 'Ledger'}</h1>
+          <p>{levelText}{perms.expiresAt ? ` · until ${new Date(perms.expiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })}` : ''}</p>
+          {isSuperAdmin && (
+            <select value={accountCentreId} onChange={(e) => { setAccountCentreId(e.target.value); setTab(t => (t === 'sharing' ? 'transactions' : t)); }} className="input-field" style={{ width: 'auto', marginTop: '12px', padding: '8px 12px' }} aria-label="Centre account">
+              {(access.centres || []).map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+            </select>
+          )}
         </div>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <Button variant="default" onClick={handleExport} disabled={exporting || !pagination.total} style={{ width: 'auto', padding: '10px 18px' }}>
             {exporting ? 'Exporting…' : '⬇ Export CSV'}
           </Button>
-          <Button onClick={() => setForm({ transaction: null })} style={{ width: 'auto', padding: '10px 18px' }}>+ Add Entry</Button>
+          {perms.canAdd && <Button onClick={() => setForm({ transaction: null })} style={{ width: 'auto', padding: '10px 18px' }}>+ Add Entry</Button>}
         </div>
       </div>
+
+      {isSuperAdmin && <UnassignedEntries centres={access.centres || []} onMoved={(message) => refresh(message)} />}
 
       {notice && (
         <div role="status" style={{ background: 'rgba(16,185,129,0.12)', color: 'var(--accent-success)', padding: '10px 14px', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '0.9rem' }}>
@@ -325,7 +370,7 @@ const Ledger = () => {
 
       {/* Tabs */}
       <div className="tab-row" role="tablist" style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
-        {[['transactions', 'Transactions'], ['monthly', 'Monthly'], ['breakdown', 'Breakdown']].map(([key, label]) => (
+        {[['transactions', 'Transactions'], ['monthly', 'Monthly'], ['breakdown', 'Breakdown'], ...(perms.canRestore ? [['deleted', 'Deleted']] : []), ...(perms.canShare ? [['sharing', 'Sharing']] : [])].map(([key, label]) => (
           <Button key={key} role="tab" aria-selected={tab === key} variant={tab === key ? 'primary' : 'default'} onClick={() => setTab(key)} style={{ width: 'auto' }}>{label}</Button>
         ))}
       </div>
@@ -421,6 +466,8 @@ const Ledger = () => {
       </Card>
 
       {tab === 'monthly' && <MonthlyView key={refreshKey} filterParams={filterParams} onSelectMonth={showMonth} />}
+      {tab === 'deleted' && perms.canRestore && <DeletedEntries key={refreshKey} params={isSuperAdmin ? { centreId: accountCentreId } : {}} onRestored={(message) => refresh(message)} />}
+      {tab === 'sharing' && perms.canShare && <AccountSharing centreName={accountName} onChanged={(message) => setNotice(message)} />}
       {tab === 'breakdown' && <BreakdownView key={refreshKey} filterParams={queryParams} periodName={periodName} onSelectCategory={showCategory} />}
 
       {tab === 'transactions' && (
@@ -446,8 +493,8 @@ const Ledger = () => {
                 </>
               ) : (
                 <>
-                  <p style={{ marginBottom: '16px' }}>No entries yet. Record your first income or expense.</p>
-                  <Button onClick={() => setForm({ transaction: null })} style={{ width: 'auto', padding: '10px 18px' }}>+ Add Entry</Button>
+                  <p style={{ marginBottom: '16px' }}>No entries yet.{perms.canAdd ? ' Record your first income or expense.' : ''}</p>
+                  {perms.canAdd && <Button onClick={() => setForm({ transaction: null })} style={{ width: 'auto', padding: '10px 18px' }}>+ Add Entry</Button>}
                 </>
               )}
             </div>
@@ -496,8 +543,9 @@ const Ledger = () => {
                           {isIncome ? '+' : '−'}{formatINR(t.amount)}
                         </td>
                         <td data-label="" style={{ ...td, textAlign: 'right', whiteSpace: 'nowrap' }}>
-                          <button type="button" onClick={() => setForm({ transaction: t })} style={{ ...linkButton, color: 'var(--accent-primary)' }}>Edit</button>
-                          <button type="button" onClick={() => handleDelete(t)} style={{ ...linkButton, color: 'var(--accent-danger)' }}>Delete</button>
+                          <button type="button" onClick={() => setHistoryEntry(t)} style={{ ...linkButton, color: 'var(--text-secondary)' }}>History</button>
+                          {canChange(t) && <button type="button" onClick={() => setForm({ transaction: t })} style={{ ...linkButton, color: 'var(--accent-primary)' }}>Edit</button>}
+                          {canChange(t) && <button type="button" onClick={() => handleDelete(t)} style={{ ...linkButton, color: 'var(--accent-danger)' }}>Delete</button>}
                         </td>
                       </tr>
                     );
@@ -539,7 +587,7 @@ const Ledger = () => {
             <strong style={{ color: 'var(--accent-primary)', whiteSpace: 'nowrap' }}>{selection.count} selected</strong>
             <div style={{ display: 'flex', gap: '4px' }}>
               <button type="button" onClick={() => setSelected({})} style={{ ...linkButton, color: 'var(--text-secondary)' }}>Clear</button>
-              <button type="button" onClick={handleBulkDelete} style={{ ...linkButton, color: 'var(--accent-danger)' }}>Delete</button>
+              {perms.canEditOwn && <button type="button" onClick={handleBulkDelete} style={{ ...linkButton, color: 'var(--accent-danger)' }}>Delete</button>}
             </div>
           </div>
           <div className="selection-stats" style={{ display: 'flex', gap: '6px 18px', flexWrap: 'wrap', fontSize: '0.85rem', fontVariantNumeric: 'tabular-nums' }}>
@@ -554,6 +602,8 @@ const Ledger = () => {
         </div>,
         document.body
       )}
+
+      {historyEntry && <EntryHistory entry={historyEntry} onClose={() => setHistoryEntry(null)} />}
 
       {form && (
         <TransactionForm

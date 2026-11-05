@@ -50,7 +50,13 @@ export const transactionApi = {
   update: (id, data) => api.put(`/transaction/${id}`, data), // data can be FormData (payment proof)
   delete: (id) => api.delete(`/transaction/${id}`),
   bulkDelete: (ids) => api.post('/transaction/bulk-delete', { ids }),
-  getCategories: () => api.get('/transaction/categories'),
+  getCategories: (params) => api.get('/transaction/categories', { params }),
+  getDeleted: (params) => api.get('/transaction/deleted', { params }),
+  restore: (id) => api.post(`/transaction/${id}/restore`),
+  history: (id) => api.get(`/transaction/${id}/history`),
+  // Super Admin: entries from before centre accounts
+  unassigned: () => api.get('/transaction/unassigned'),
+  assignUnassigned: (recordedBy, centreId) => api.post('/transaction/unassigned/assign', { recordedBy, centreId }),
   getMonthly: (params) => api.get('/transaction/monthly', { params }),
   getBreakdown: (params) => api.get('/transaction/breakdown', { params }),
   exportCsv: (params) => api.get('/transaction/export', { params, responseType: 'blob' })
@@ -95,6 +101,13 @@ export const centreApi = {
   mine: () => api.get('/centres/mine'),
   addCoAdmin: (userId) => api.post('/centres/mine/co-admins', { userId }),
   removeCoAdmin: (userId, role) => api.delete(`/centres/mine/co-admins/${userId}`, { data: { role } })
+};
+
+export const accountAccessApi = {
+  me: () => api.get('/account-access/me'),
+  list: () => api.get('/account-access'),
+  grant: (userId, level, expiresOn) => api.put('/account-access', { userId, level, expiresOn }),
+  revoke: (userId) => api.delete(`/account-access/${userId}`)
 };
 
 export const roleRequestApi = {

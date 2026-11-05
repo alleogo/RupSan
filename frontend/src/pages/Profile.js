@@ -177,6 +177,8 @@ const Profile = () => {
 
   const isParticipant = user.role === 'Participant';
   const savedCentreId = user.centreId?._id || user.centreId || '';
+  // Participants can change centre; managers from before centres pick one once (then need approval)
+  const canPickCentre = isParticipant || (user.role === 'Manager' && !savedCentreId);
   const missingForVerification = [
     !user.phoneNumber && 'phone number',
     !savedCentreId && 'centre',
@@ -231,14 +233,15 @@ const Profile = () => {
           <Input label="Phone Number" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} placeholder="+91 9876543210" />
           <div style={{ marginBottom: '16px' }}>
             <label htmlFor="profile-centre" style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Centre</label>
-            <select id="profile-centre" name="centreId" value={formData.centreId} onChange={handleChange} className="input-field" disabled={!isParticipant} style={{ cursor: isParticipant ? 'pointer' : 'not-allowed' }}>
+            <select id="profile-centre" name="centreId" value={formData.centreId} onChange={handleChange} className="input-field" disabled={!canPickCentre} style={{ cursor: canPickCentre ? 'pointer' : 'not-allowed' }}>
               <option value="">Choose your centre</option>
               {centres.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
             </select>
             {isParticipant && formData.centreId && formData.centreId !== savedCentreId && savedCentreId && (
               <p style={{ fontSize: '0.8rem', marginTop: '6px', color: 'var(--accent-warning)' }}>Changing your centre means the new centre's admin has to verify you again.</p>
             )}
-            {!isParticipant && <p style={{ fontSize: '0.8rem', marginTop: '6px' }}>Ask your centre's admin if your centre needs to change.</p>}
+            {!canPickCentre && <p style={{ fontSize: '0.8rem', marginTop: '6px' }}>Ask your centre's admin if your centre needs to change.</p>}
+            {user.role === 'Manager' && !savedCentreId && <p style={{ fontSize: '0.8rem', marginTop: '6px', color: 'var(--accent-warning)' }}>Choose your centre. Its admin will then approve you as a manager there.</p>}
           </div>
 
           <div style={{ marginBottom: '16px' }}>

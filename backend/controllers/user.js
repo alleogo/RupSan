@@ -33,16 +33,25 @@ exports.updateProfile = async (req, res) => {
         if (email !== undefined) updates.email = email;
         if (phoneNumber !== undefined) updates.phoneNumber = phoneNumber;
 
+        let managerNeedsApproval = false;
         if (centreId !== undefined && String(centreId || "") !== String(current.centreId || "")) {
-            if (current.role !== "Participant") {
+            // Participants may change centre; managers from before centres may pick one once
+            const managerPickingFirstCentre = current.role === "Manager" && !current.centreId;
+            if (current.role !== "Participant" && !managerPickingFirstCentre) {
                 return res.status(403).json({ success: false, message: "Only participants can change their centre. Ask your centre admin." });
             }
             if (!mongoose.Types.ObjectId.isValid(centreId) || !(await Centre.exists({ _id: centreId }))) {
                 return res.status(400).json({ success: false, message: "Choose a centre from the list" });
             }
             updates.centreId = centreId;
-            // The new centre's admin has to verify them
-            if (current.verificationStatus !== "Unverified") updates.verificationStatus = "Unverified";
+            if (managerPickingFirstCentre) {
+                // The centre's admin approves them as a manager there, like a new manager signup
+                updates.status = "Pending";
+                managerNeedsApproval = true;
+            } else if (current.verificationStatus !== "Unverified") {
+                // The new centre's admin has to verify them
+                updates.verificationStatus = "Unverified";
+            }
         }
 
         await User.updateOne({ _id: req.user.id }, { $set: updates });
@@ -50,7 +59,20 @@ exports.updateProfile = async (req, res) => {
         if (updates.centreId) await AccountAccess.deleteMany({ user: req.user.id });
         invalidateRoleCache(req.user.id);
         const user = await loadPublicUser(req.user.id);
-        const message = updates.centreId ? "Profile updated. Request verification so your new centre's admin can verify you." : "Profile updated successfully";
+        if (managerNeedsApproval) {
+            const siteUrl = getSiteUrl(req);
+            await notifyCentreAdmins(
+                updates.centreId,
+                `Manager Approval Request: ${user.firstName} ${user.lastName}`,
+                (admin) => `<p>Dear ${escapeHtml(admin.firstName)},</p>
+                 <p><b>${escapeHtml(user.firstName)} ${escapeHtml(user.lastName)}</b> (${escapeHtml(user.email)}) is a manager and has chosen ${escapeHtml(user.centreId.name)} as their centre.</p>
+                 <p>Please <a href="${siteUrl}/">log in to the dashboard</a> to approve or reject them as a manager of your centre.</p>
+                 <p>Thank you!</p>`
+            );
+        }
+        const message = managerNeedsApproval
+            ? "Centre saved. Your centre's admin needs to approve you as a manager there."
+            : updates.centreId ? "Profile updated. Request verification so your new centre's admin can verify you." : "Profile updated successfully";
         return res.status(200).json({ success: true, message, user });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
