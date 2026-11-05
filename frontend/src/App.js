@@ -11,6 +11,7 @@ import YatraManagement from './pages/YatraManagement';
 import Ledger from './pages/Ledger';
 import Users from './pages/Users';
 import Centres from './pages/Centres';
+import AllYatras from './pages/AllYatras';
 import { AuthProvider } from './context/AuthContext';
 import BackgroundDesign from './components/BackgroundDesign';
 import './index.css';
@@ -36,6 +37,7 @@ const AppContent = () => {
           <Route path="/ledger" element={<Ledger />} />
           <Route path="/users" element={<Users />} />
           <Route path="/centres" element={<Centres />} />
+          <Route path="/all-yatras" element={<AllYatras />} />
         </Routes>
       </main>
     </div>

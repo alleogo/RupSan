@@ -7,6 +7,7 @@ import { yatraApi, transactionApi, authApi, registrationApi, userApi, settingsAp
 import ManagerAccessRequests from '../components/ManagerAccessRequests';
 import AadharCardLink from '../components/AadharCardLink';
 import SuperAdminHome from '../components/SuperAdminHome';
+import { canManageYatra, visibilityLabel } from '../utils/yatraAccess';
 import ImageCropper, { YATRA_CARD_ASPECT, YATRA_CARD_ASPECT_CSS } from '../components/ImageCropper';
 
 const Dashboard = () => {
@@ -116,11 +117,9 @@ const Dashboard = () => {
     const statusColor = yatra.status === 'Ongoing' ? 'var(--accent-success)' : yatra.status === 'Completed' ? 'var(--text-secondary)' : 'var(--accent-primary)';
     const statusBg = yatra.status === 'Ongoing' ? 'rgba(16,185,129,0.15)' : yatra.status === 'Completed' ? 'rgba(255,255,255,0.08)' : 'rgba(212,175,55,0.15)';
 
-    const userId = user?._id || user?.id;
-    const isOwner = (yatra?.createdBy?._id || yatra?.createdBy)?.toString() === userId?.toString();
     let buttonText = 'View Yatra';
-    if (user?.role === 'Admin' || (user?.role === 'Manager' && isOwner)) buttonText = 'Manage Details';
-    else if (user?.role === 'Manager') buttonText = 'Open details';
+    if (canManageYatra(user, yatra)) buttonText = 'Manage Details';
+    else if (user?.role === 'Manager' || user?.role === 'Admin') buttonText = 'Open details';
 
     return (
       <Card style={{ padding: 0, overflow: 'hidden' }}>
@@ -147,6 +146,7 @@ const Dashboard = () => {
               👤 Manager: {yatra.createdBy.firstName} {yatra.createdBy.lastName}
             </p>
           )}
+          <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '3px' }}>🌐 {visibilityLabel(yatra)}</p>
           {user?.role === 'Participant' && myReg?.status === 'Approved' && (
             <div style={{ marginTop: '10px', padding: '10px', background: 'rgba(99,102,241,0.07)', borderRadius: '8px', fontSize: '0.84rem', borderLeft: '3px solid var(--accent-primary)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-secondary)' }}>Yatra Amount</span><span>₹{myReg.amountToBePaid || yatra.registrationFee}</span></div>

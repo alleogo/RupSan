@@ -30,6 +30,7 @@ export const authApi = {
 export const yatraApi = {
   getAll: () => api.get('/yatra'),
   getById: (id) => api.get(`/yatra/${id}`),
+  search: (params) => api.get('/yatra/search', { params }), // Super Admin
   create: (data) => api.post('/yatra', data), // data can be FormData
   update: (id, data) => api.put(`/yatra/${id}`, data), // data can be FormData
   delete: (id) => api.delete(`/yatra/${id}`)

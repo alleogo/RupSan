@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FiLayout, FiUser, FiLogOut, FiMenu, FiX, FiArrowLeft, FiMapPin } from 'react-icons/fi';
+import { FiLayout, FiUser, FiLogOut, FiMenu, FiX, FiArrowLeft, FiMapPin, FiCompass } from 'react-icons/fi';
 import { AuthContext } from '../context/AuthContext';
 import { settingsApi, getImageUrl } from '../utils/api';
 
@@ -145,6 +145,11 @@ const Navbar = () => {
         {user && (user.role === 'Manager' || user.role === 'Admin') && (
           <Link to="/ledger" style={{ color: isActive('/ledger'), textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '500', transition: 'var(--transition-fast)' }}>
             💰 Ledger
+          </Link>
+        )}
+        {user?.role === 'SuperAdmin' && (
+          <Link to="/all-yatras" style={{ color: isActive('/all-yatras'), textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '500', transition: 'var(--transition-fast)' }}>
+            <FiCompass /> Yatras
           </Link>
         )}
         {user?.role === 'SuperAdmin' && (

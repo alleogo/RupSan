@@ -3,6 +3,7 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import { Link } from 'react-router-dom';
 import { yatraApi, getImageUrl } from '../utils/api';
+import { visibilityLabel } from '../utils/yatraAccess';
 import { YATRA_CARD_ASPECT_CSS } from '../components/ImageCropper';
 
 const PreviousYatras = () => {
@@ -50,6 +51,7 @@ const PreviousYatras = () => {
             👤 Manager: {yatra.createdBy.firstName} {yatra.createdBy.lastName}
           </p>
         )}
+        <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '3px' }}>🌐 {visibilityLabel(yatra)}</p>
         <div style={{ marginTop: '14px' }}>
           <Link to={`/yatra/${yatra._id}`} style={{ textDecoration: 'none' }}>
             <Button variant="default">View Details</Button>

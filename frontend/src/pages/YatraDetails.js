@@ -5,6 +5,8 @@ import Button from '../components/Button';
 import { yatraApi, expenseApi, ticketApi, registrationApi, reviewApi, getMediaUrl, getImageUrl } from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
 import AadharCardLink from '../components/AadharCardLink';
+import VisibilityPicker from '../components/VisibilityPicker';
+import { visibilityLabel, visibilityValue, userCentreId } from '../utils/yatraAccess';
 import ImageCropper, { YATRA_CARD_ASPECT, YATRA_CARD_ASPECT_CSS } from '../components/ImageCropper';
 
 const YatraDetails = () => {
@@ -13,6 +15,7 @@ const YatraDetails = () => {
   const [activeTab, setActiveTab] = useState('expenses'); // 'expenses', 'tickets', 'registrationsLog', 'requests', 'reviews'
   
   const [yatra, setYatra] = useState(null);
+  const [canManage, setCanManage] = useState(false); // from the server: creator or an admin of the yatra's centre
   const [expenses, setExpenses] = useState([]);
   const [tickets, setTickets] = useState([]);
   const [registrationsLog, setRegistrationsLog] = useState([]);
@@ -76,7 +79,10 @@ const YatraDetails = () => {
           isManagerOrAdmin ? registrationApi.getAll(id, { status: 'Pending' }).catch(() => null) : null
         ]);
 
-        if (yatraRes.data.success) setYatra(yatraRes.data.yatra);
+        if (yatraRes.data.success) {
+          setYatra(yatraRes.data.yatra);
+          setCanManage(Boolean(yatraRes.data.canManage));
+        }
 
         if (reviewRes?.data.success) {
           const list = reviewRes.data.reviews;
@@ -308,6 +314,7 @@ const YatraDetails = () => {
       formData.append('registrationFee', editYatraData.registrationFee);
 
       if (editYatraData.upiId !== undefined) formData.append('upiId', editYatraData.upiId);
+      if (editYatraData.visibility) formData.append('visibility', JSON.stringify(editYatraData.visibility));
       if (editYatraData.newThumbnail) formData.append('thumbnail', editYatraData.newThumbnail);
       if (editYatraData.newQrCode) formData.append('qrCode', editYatraData.newQrCode);
 
@@ -335,8 +342,7 @@ const YatraDetails = () => {
   if (!yatra) return <div style={{ padding: '24px', textAlign: 'center' }}>Yatra not found.</div>;
 
   const isManagerOrAdmin = user?.role === 'Admin' || user?.role === 'Manager';
-  const userId = user?._id || user?.id;
-  const isYatraOwner = (yatra?.createdBy?._id || yatra?.createdBy)?.toString() === userId?.toString();
+  const isYatraOwner = canManage;
   const statusColor = yatra.status === 'Ongoing' ? 'var(--accent-success)' : yatra.status === 'Completed' ? 'var(--text-secondary)' : 'var(--accent-primary)';
   const statusBg = yatra.status === 'Ongoing' ? 'rgba(16,185,129,0.15)' : yatra.status === 'Completed' ? 'rgba(255,255,255,0.08)' : 'rgba(212,175,55,0.15)';
   const metaChipStyle = { display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '20px', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '0.85rem' };
@@ -364,6 +370,7 @@ const YatraDetails = () => {
             <span style={metaChipStyle}>📍 {yatra.destination}</span>
             <span style={metaChipStyle}>📅 {new Date(yatra.startDate).toLocaleDateString()} – {new Date(yatra.endDate).toLocaleDateString()}</span>
             <span style={metaChipStyle}>💰 ₹{Number(yatra.registrationFee || 0).toLocaleString('en-IN')}</span>
+            <span style={metaChipStyle}>🌐 {visibilityLabel(yatra)}</span>
           </div>
 
           {yatra.description && <p style={{ marginBottom: '20px' }}>{yatra.description}</p>}
@@ -430,8 +437,8 @@ const YatraDetails = () => {
                 startDate: yatra.startDate?.slice(0, 10),
                 endDate: yatra.endDate?.slice(0, 10),
                 registrationFee: yatra.registrationFee,
-
-                upiId: yatra.upiId || ''
+                upiId: yatra.upiId || '',
+                visibility: visibilityValue(yatra)
               });
               setEditYatraModalOpen(true);
             }}
@@ -456,7 +463,7 @@ const YatraDetails = () => {
             <Button variant={activeTab === 'expenses' ? 'primary' : 'default'} onClick={() => setActiveTab('expenses')} style={{ width: 'auto' }}>Expenses</Button>
             <Button variant={activeTab === 'tickets' ? 'primary' : 'default'} onClick={() => setActiveTab('tickets')} style={{ width: 'auto' }}>Tickets</Button>
             <Button variant={activeTab === 'registrationsLog' ? 'primary' : 'default'} onClick={() => setActiveTab('registrationsLog')} style={{ width: 'auto' }}>Registrations Log</Button>
-            {(isYatraOwner || user?.role === 'Admin') && (
+            {isYatraOwner && (
               <Button variant={activeTab === 'requests' ? 'primary' : 'default'} onClick={() => setActiveTab('requests')} style={{ width: 'auto' }}>Requests</Button>
             )}
             <Button variant={activeTab === 'reviews' ? 'primary' : 'default'} onClick={() => setActiveTab('reviews')} style={{ width: 'auto' }}>Reviews</Button>
@@ -467,7 +474,7 @@ const YatraDetails = () => {
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
                   <h2>Expenses</h2>
-                  {(isYatraOwner || user?.role === 'Admin') && <Button style={{ width: 'auto' }} onClick={() => setExpenseModalOpen(true)}>+ Add Expense</Button>}
+                  {isYatraOwner && <Button style={{ width: 'auto' }} onClick={() => setExpenseModalOpen(true)}>+ Add Expense</Button>}
                 </div>
                 <div className="table-scroll"><table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                   <thead>
@@ -485,7 +492,7 @@ const YatraDetails = () => {
                         <td style={{ padding: '12px' }}>{exp.description}</td>
                         <td style={{ padding: '12px', fontWeight: 'bold' }}>₹{exp.amount}</td>
                         <td style={{ padding: '12px' }}>
-                          {(isYatraOwner || user?.role === 'Admin') && (
+                          {isYatraOwner && (
                             <>
                               <Button variant="default" style={{ padding: '4px 8px', fontSize: '0.8rem', marginRight: '8px' }} onClick={() => { setEditExpenseData(exp); setEditExpenseModalOpen(true); }}>Edit</Button>
                               <Button variant="danger" style={{ padding: '4px 8px', fontSize: '0.8rem' }} onClick={() => handleDeleteExpense(exp._id)}>Delete</Button>
@@ -503,7 +510,7 @@ const YatraDetails = () => {
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
                   <h2>Tickets</h2>
-                  {(isYatraOwner || user?.role === 'Admin') && <Button style={{ width: 'auto' }} onClick={() => setTicketModalOpen(true)}>+ Add Ticket</Button>}
+                  {isYatraOwner && <Button style={{ width: 'auto' }} onClick={() => setTicketModalOpen(true)}>+ Add Ticket</Button>}
                 </div>
                 
                 {tickets.length > 0 ? (
@@ -528,7 +535,7 @@ const YatraDetails = () => {
                             {ticket.ticketCancellationFile && <a href={getMediaUrl(ticket.ticketCancellationFile)} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-warning)' }}>Cancel File 📎</a>}
                           </td>
                           <td style={{ padding: '12px' }}>
-                            {(isYatraOwner || user?.role === 'Admin') && (
+                            {isYatraOwner && (
                               <>
                                 <Button variant="default" style={{ padding: '4px 8px', fontSize: '0.8rem', marginRight: '8px' }} onClick={() => { setEditTicketData(ticket); setEditTicketModalOpen(true); }}>Edit</Button>
                                 <Button variant="danger" style={{ padding: '4px 8px', fontSize: '0.8rem' }} onClick={() => handleDeleteTicket(ticket._id)}>Delete</Button>
@@ -572,7 +579,7 @@ const YatraDetails = () => {
                         <td style={{ padding: '12px', color: 'var(--accent-success)' }}>₹{reg.paidCash || 0}</td>
                         <td style={{ padding: '12px', color: left > 0 ? 'var(--accent-danger)' : 'var(--accent-success)' }}>₹{left}</td>
                         <td style={{ padding: '12px' }}>
-                          {(isYatraOwner || user?.role === 'Admin') && (
+                          {isYatraOwner && (
                             <Button variant="default" style={{ padding: '4px 8px', fontSize: '0.8rem' }} onClick={() => { setEditRegData(reg); setRegEditModalOpen(true); }}>Edit Details</Button>
                           )}
                         </td>
@@ -583,7 +590,7 @@ const YatraDetails = () => {
               </div>
             )}
 
-            {activeTab === 'requests' && (isYatraOwner || user?.role === 'Admin') && (
+            {activeTab === 'requests' && isYatraOwner && (
               <div>
                 <h2 style={{ marginBottom: '16px' }}>Enrollment Requests</h2>
                 {requests.length > 0 ? (
@@ -600,7 +607,7 @@ const YatraDetails = () => {
                             </a>
                           </div>
                         )}
-                        {(isYatraOwner || user?.role === 'Admin') && (
+                        {isYatraOwner && (
                           <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
                             <Button variant="primary" onClick={() => handleApproveReg(reg)} style={{ flex: 1 }}>Approve</Button>
                             <Button variant="danger" onClick={() => handleRejectReg(reg)} style={{ flex: 1 }}>Reject</Button>
@@ -959,6 +966,7 @@ const YatraDetails = () => {
                 <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9rem' }}>UPI ID (optional)</label>
                 <input type="text" className="input-field" value={editYatraData.upiId || ''} onChange={e => setEditYatraData({...editYatraData, upiId: e.target.value})} />
               </div>
+              <VisibilityPicker value={editYatraData.visibility} onChange={(visibility) => setEditYatraData({ ...editYatraData, visibility })} ownCentreId={(yatra.centre?._id || yatra.centre) || userCentreId(user)} />
               {cropperImageSrc ? (
                 <div style={{ marginBottom: '12px', background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '8px' }}>
                   <p style={{ fontSize: '0.85rem', marginBottom: '8px', color: 'var(--text-secondary)' }}>Crop your thumbnail image:</p>

@@ -4,6 +4,8 @@ import Button from '../components/Button';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { yatraApi, getImageUrl } from '../utils/api';
+import VisibilityPicker from '../components/VisibilityPicker';
+import { canManageYatra, userCentreId, visibilityLabel } from '../utils/yatraAccess';
 import ImageCropper, { YATRA_CARD_ASPECT, YATRA_CARD_ASPECT_CSS } from '../components/ImageCropper';
 
 const YatraManagement = () => {
@@ -13,7 +15,8 @@ const YatraManagement = () => {
   const [newYatra, setNewYatra] = useState({
     title: '', description: '', startDate: '', endDate: '',
     destination: '', registrationFee: '', upiId: '',
-    thumbnail: null, qrCode: null
+    thumbnail: null, qrCode: null,
+    visibility: { allCentres: false, centres: [] }
   });
   const [cropperImageSrc, setCropperImageSrc] = useState(null);
 
@@ -57,6 +60,7 @@ const YatraManagement = () => {
       formData.append('destination', newYatra.destination);
       formData.append('registrationFee', newYatra.registrationFee);
       if (newYatra.upiId) formData.append('upiId', newYatra.upiId);
+      formData.append('visibility', JSON.stringify(newYatra.visibility));
       if (newYatra.thumbnail) formData.append('thumbnail', newYatra.thumbnail);
       if (newYatra.qrCode) formData.append('qrCode', newYatra.qrCode);
 
@@ -64,7 +68,7 @@ const YatraManagement = () => {
       if (res.data.success) {
         setYatras([res.data.yatra, ...yatras]);
         setIsModalOpen(false);
-        setNewYatra({ title: '', description: '', startDate: '', endDate: '', destination: '', registrationFee: '', upiId: '', thumbnail: null, qrCode: null });
+        setNewYatra({ title: '', description: '', startDate: '', endDate: '', destination: '', registrationFee: '', upiId: '', thumbnail: null, qrCode: null, visibility: { allCentres: false, centres: [] } });
       }
     } catch (error) {
       alert(error.response?.data?.message || 'Failed to create yatra');
@@ -81,11 +85,9 @@ const YatraManagement = () => {
     const statusColor = yatra.status === 'Ongoing' ? 'var(--accent-success)' : 'var(--accent-primary)';
     const statusBg = yatra.status === 'Ongoing' ? 'rgba(16,185,129,0.15)' : 'rgba(212,175,55,0.15)';
 
-    const userId = user?._id || user?.id;
-    const isOwner = (yatra?.createdBy?._id || yatra?.createdBy)?.toString() === userId?.toString();
     let buttonText = 'View Yatra';
-    if (user?.role === 'Admin' || (user?.role === 'Manager' && isOwner)) buttonText = 'Manage Details';
-    else if (user?.role === 'Manager') buttonText = 'Open details';
+    if (canManageYatra(user, yatra)) buttonText = 'Manage Details';
+    else if (user?.role === 'Manager' || user?.role === 'Admin') buttonText = 'Open details';
 
     return (
       <Card style={{ padding: 0, overflow: 'hidden' }}>
@@ -112,6 +114,7 @@ const YatraManagement = () => {
               👤 Manager: {yatra.createdBy.firstName} {yatra.createdBy.lastName}
             </p>
           )}
+          <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '3px' }}>🌐 {visibilityLabel(yatra)}</p>
           <div style={{ marginTop: '14px' }}>
             <Link to={`/yatra/${yatra._id}`} style={{ textDecoration: 'none' }}>
               <Button variant="primary">{buttonText}</Button>
@@ -202,6 +205,8 @@ const YatraManagement = () => {
                 <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9rem' }}>Registration Fee (₹) *</label>
                 <input type="number" className="input-field" value={newYatra.registrationFee} onChange={e => setNewYatra({...newYatra, registrationFee: e.target.value})} required />
               </div>
+
+              <VisibilityPicker value={newYatra.visibility} onChange={(visibility) => setNewYatra({ ...newYatra, visibility })} ownCentreId={userCentreId(user)} />
 
               {/* Thumbnail */}
               {cropperImageSrc ? (

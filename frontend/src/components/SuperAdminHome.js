@@ -46,6 +46,7 @@ const SuperAdminHome = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))', gap: '16px' }}>
         <Shortcut to="/centres" title="Centres" text="Add, rename or delete centres and appoint their admins." />
         <Shortcut to="/users" title="Users" text="Search everyone on the platform, by centre, role or verification." />
+        <Shortcut to="/all-yatras" title="Yatras" text="Browse every yatra by centre, status, dates or keyword." />
       </div>
     </div>
   );
