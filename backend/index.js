@@ -62,6 +62,7 @@ app.use("/api/v1/transaction", require("./routes/transaction"));
 app.use("/api/v1/review", require("./routes/review"));
 app.use("/api/v1/settings", require("./routes/settings"));
 app.use("/api/v1/role-request", require("./routes/roleRequest"));
+app.use("/api/v1/centres", require("./routes/centre"));
 
 // Start Cron Jobs
 const { runYatraReviewJob } = require("./utils/cron");

@@ -20,11 +20,17 @@ const getSiteUrl = (req) => {
     return `${req.protocol}://${req.get("host")}`;
 };
 
-// Email every admin; `buildHtml` receives each admin so the greeting can use their name
-const notifyAdmins = async (subject, buildHtml) => {
-    const admins = await User.find({ role: "Admin" }).select("email firstName");
-    await Promise.all(admins.map(admin => mailSender(admin.email, subject, buildHtml(admin))));
-    return admins.length;
+const sendToAll = async (recipients, subject, buildHtml) => {
+    await Promise.all(recipients.map(person => mailSender(person.email, subject, buildHtml(person))));
+    return recipients.length;
 };
 
-module.exports = { escapeHtml, escapeRegex, getSiteUrl, notifyAdmins };
+// Email the admin and co-admins of a centre; `buildHtml` receives each recipient so the greeting can use
+// their name. If the centre has no admins yet, the Super Admin is told instead so nothing is missed.
+const notifyCentreAdmins = async (centreId, subject, buildHtml) => {
+    let recipients = centreId ? await User.find({ role: "Admin", centreId }).select("email firstName") : [];
+    if (!recipients.length) recipients = await User.find({ role: "SuperAdmin" }).select("email firstName");
+    return sendToAll(recipients, subject, buildHtml);
+};
+
+module.exports = { escapeHtml, escapeRegex, getSiteUrl, notifyCentreAdmins };

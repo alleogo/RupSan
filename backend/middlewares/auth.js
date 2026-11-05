@@ -1,19 +1,21 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { syncTemporaryRole } = require("../utils/tempManager");
+require("dotenv").config();
 
-// Manager tokens can outlive a demotion or expiry, so their role is looked up in the database.
-// Results are cached per server instance for a short time to keep manager requests fast;
+// Tokens identify the user; their current role and centre come from the database, so promotions,
+// demotions, centre changes and temporary access apply without signing in again.
+// Lookups are cached per server instance for a short time to keep requests fast;
 // changes made on this instance clear the cache immediately (see invalidateRoleCache).
 const ROLE_CACHE_MS = 30 * 1000;
 const roleCache = new Map();
 
-const loadCurrentRole = async (userId) => {
+const loadCurrentUser = async (userId) => {
     const key = String(userId);
     const hit = roleCache.get(key);
     let user = hit && Date.now() - hit.at < ROLE_CACHE_MS ? hit.user : null;
     if (!user) {
-        user = await User.findById(userId).select("role status tempManagerFrom tempManagerUntil tempManagerRequest");
+        user = await User.findById(userId).select("role status centreId verificationStatus tempManagerFrom tempManagerUntil tempManagerRequest");
         if (!user) return null;
         if (roleCache.size > 1000) roleCache.clear();
         roleCache.set(key, { user, at: Date.now() });
@@ -24,64 +26,66 @@ const loadCurrentRole = async (userId) => {
 };
 
 exports.invalidateRoleCache = (userId) => roleCache.delete(String(userId));
-require("dotenv").config();
 
 exports.auth = async (req, res, next) => {
-    try {
-        const token = req.header("Authorization")?.replace("Bearer ", "");
-        if (!token) {
-            console.log(`[Auth Middleware] Token missing for request to ${req.method} ${req.path}`);
-            return res.status(401).json({ success: false, message: "Token is missing" });
-        }
+    const token = req.header("Authorization")?.replace("Bearer ", "");
+    if (!token) {
+        return res.status(401).json({ success: false, message: "Token is missing" });
+    }
 
-        try {
-            const decode = jwt.verify(token, process.env.JWT_SECRET || "fallback_secret");
-            req.tokenClaims = decode;
-            req.user = decode;
-            // Managers and temporary managers: use the current role, so demotion, expiry and revocation take effect
-            if (decode.role === "Manager" || decode.tempManager) {
-                const user = await loadCurrentRole(decode.id);
-                if (!user) return res.status(401).json({ success: false, message: "Invalid token" });
-                req.user = { ...decode, role: user.role, status: user.status };
-            }
-            console.log(`[Auth Middleware] User authenticated: ${decode._id} (Role: ${decode.role})`);
-        } catch (error) {
-            console.log(`[Auth Middleware] Invalid token - verification failed`);
-            return res.status(401).json({ success: false, message: "Invalid token" });
-        }
+    let decode;
+    try {
+        decode = jwt.verify(token, process.env.JWT_SECRET || "fallback_secret");
+    } catch (error) {
+        return res.status(401).json({ success: false, message: "Invalid token" });
+    }
+
+    try {
+        const user = await loadCurrentUser(decode.id);
+        if (!user) return res.status(401).json({ success: false, message: "Invalid token" });
+        req.tokenClaims = decode;
+        req.user = {
+            ...decode,
+            role: user.role,
+            status: user.status,
+            centreId: user.centreId ? String(user.centreId) : null,
+            verificationStatus: user.verificationStatus
+        };
         next();
     } catch (error) {
-        return res.status(500).json({ success: false, message: "Token validation issue occurred" });
+        // A database problem is not the user's fault: don't answer 401, which would sign them out
+        console.error("[Auth Middleware] Could not load user:", error.message);
+        return res.status(503).json({ success: false, message: "Service temporarily unavailable. Please try again." });
     }
 };
 
-exports.isAdmin = async (req, res, next) => {
-    try {
-        if (req.user.role !== "Admin") {
-            console.log(`[Auth Middleware] Admin access denied for user ${req.user._id} with role ${req.user.role}`);
-            return res.status(401).json({ success: false, message: "This is a protected route for Admins only" });
-        }
-        console.log(`[Auth Middleware] Admin access granted for user ${req.user._id}`);
-        next();
-    } catch (error) {
-        return res.status(500).json({ success: false, message: "User role cannot be verified" });
+exports.isSuperAdmin = (req, res, next) => {
+    if (req.user.role !== "SuperAdmin") {
+        return res.status(403).json({ success: false, message: "This is a protected route for the Super Admin only" });
     }
+    next();
 };
 
-exports.isManager = async (req, res, next) => {
-    try {
-        if (req.user.role === 'Manager' && req.user.status === 'Approved') {
-            console.log(`[Auth Middleware] Manager access granted for user ${req.user._id}`);
-            return next();
-        }
-        if (req.user.role === 'Admin') {
-            console.log(`[Auth Middleware] Admin access granted (Manager route) for user ${req.user._id}`);
-            return next();
-        }
-        console.log(`[Auth Middleware] Manager access denied for user ${req.user._id} (Status: ${req.user.status})`);
-        return res.status(401).json({ success: false, message: "This is a protected route for approved Managers only" });
-    } catch (error) {
-        return res.status(500).json({ success: false, message: "User role cannot be verified" });
+// Admin or co-admin of a centre
+exports.isAdmin = (req, res, next) => {
+    if (req.user.role !== "Admin") {
+        return res.status(403).json({ success: false, message: "This is a protected route for Admins only" });
     }
+    if (!req.user.centreId) {
+        return res.status(403).json({ success: false, message: "You are not assigned to a centre yet. Ask the Super Admin to assign you one." });
+    }
+    next();
 };
 
+// Centre admins (their centre) or the Super Admin (everything)
+exports.isAdminOrSuperAdmin = (req, res, next) => {
+    if (req.user.role === "SuperAdmin") return next();
+    return exports.isAdmin(req, res, next);
+};
+
+// Approved managers and centre admins
+exports.isManager = (req, res, next) => {
+    if (req.user.role === "Manager" && req.user.status === "Approved") return next();
+    if (req.user.role === "Admin" && req.user.centreId) return next();
+    return res.status(403).json({ success: false, message: "This is a protected route for approved Managers only" });
+};

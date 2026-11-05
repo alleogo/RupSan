@@ -25,7 +25,8 @@ const userSchema = new mongoose.Schema({
     role: {
         type: String,
         required: true,
-        enum: ["Admin", "Manager", "Participant"]
+        // SuperAdmin: one per platform. Admin: the admin or a co-admin of their centre (see Centre)
+        enum: ["SuperAdmin", "Admin", "Manager", "Participant"]
     },
     status: {
         type: String,
@@ -38,19 +39,32 @@ const userSchema = new mongoose.Schema({
             return "Approved";
         }
     },
+    // Legacy: no longer collected (replaced by aadharCard)
     aadharNumber: {
         type: String,
         trim: true,
         default: null
+    },
+    // Private Cloudinary image of the Aadhaar card; only viewable through signed links for admins
+    aadharCard: {
+        publicId: { type: String, default: null },
+        format: { type: String, default: null },
+        uploadedAt: { type: Date, default: null }
     },
     phoneNumber: {
         type: String,
         trim: true,
         default: null
     },
+    // Legacy free-text centre from before centres were a managed list (kept for reference only)
     centre: {
         type: String,
         trim: true,
+        default: null
+    },
+    centreId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Centre",
         default: null
     },
     verificationStatus: {

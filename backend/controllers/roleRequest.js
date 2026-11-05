@@ -1,7 +1,7 @@
 const User = require("../models/User");
 const RoleRequest = require("../models/RoleRequest");
 const mailSender = require("../utils/mailSender");
-const { escapeHtml, getSiteUrl, notifyAdmins } = require("../utils/notify");
+const { escapeHtml, getSiteUrl, notifyCentreAdmins } = require("../utils/notify");
 const { isDay, dayStart, dayEnd, syncTemporaryRole, clearTemporaryAccess } = require("../utils/tempManager");
 const { invalidateRoleCache } = require("../middlewares/auth");
 
@@ -33,6 +33,9 @@ exports.createRequest = async (req, res) => {
         if (user.role !== "Participant") {
             return res.status(403).json({ success: false, message: "Only participants can request manager access" });
         }
+        if (!user.centreId) {
+            return res.status(400).json({ success: false, message: "Choose your centre on your profile first" });
+        }
         if (user.tempManagerFrom) {
             return res.status(400).json({ success: false, message: "You already have manager access scheduled" });
         }
@@ -50,7 +53,8 @@ exports.createRequest = async (req, res) => {
         const request = await RoleRequest.create({ user: user._id, startDate: window.start, endDate: window.end, reason });
 
         const siteUrl = getSiteUrl(req);
-        const adminCount = await notifyAdmins(
+        const adminCount = await notifyCentreAdmins(
+            user.centreId,
             `Manager Access Request: ${user.firstName} ${user.lastName}`,
             (admin) => `<p>Dear ${escapeHtml(admin.firstName)},</p>
              <p><b>${escapeHtml(user.firstName)} ${escapeHtml(user.lastName)}</b> (${escapeHtml(user.email)}) has requested manager access from ${describeWindow(window.start, window.end)}.</p>
@@ -129,6 +133,8 @@ exports.listRequests = async (req, res) => {
             ? { status: { $in: ["Rejected", "Cancelled", "Ended", "Expired", "Revoked"] } }
             : { status: status === "Approved" ? "Approved" : "Pending" };
 
+        const members = await User.find({ centreId: req.user.centreId }).distinct("_id");
+        filter.user = { $in: members };
         const requests = await RoleRequest.find(filter)
             .sort({ createdAt: status === "Pending" ? 1 : -1 })
             .limit(100)
@@ -154,6 +160,9 @@ exports.reviewRequest = async (req, res) => {
         if (request.status !== "Pending") return res.status(400).json({ success: false, message: `This request is already ${request.status.toLowerCase()}` });
 
         const user = await User.findById(request.user).select("-password");
+        if (!user || String(user.centreId) !== req.user.centreId) {
+            return res.status(404).json({ success: false, message: "Request not found in your centre" });
+        }
         if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
         request.reviewedBy = req.user.id;
@@ -218,6 +227,9 @@ exports.revokeAccess = async (req, res) => {
         if (request.status !== "Approved") return res.status(400).json({ success: false, message: "Only approved access can be revoked" });
 
         const user = await User.findById(request.user).select("-password");
+        if (!user || String(user.centreId) !== req.user.centreId) {
+            return res.status(404).json({ success: false, message: "Request not found in your centre" });
+        }
         if (user && user.tempManagerRequest && user.tempManagerRequest.toString() === request._id.toString()) {
             await clearTemporaryAccess(user);
             invalidateRoleCache(user._id);

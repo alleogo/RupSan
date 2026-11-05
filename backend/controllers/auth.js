@@ -1,10 +1,14 @@
 const User = require("../models/User");
 const OTP = require("../models/OTP");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 const otpGenerator = require("otp-generator");
 const mailSender = require("../utils/mailSender");
-const { escapeHtml, getSiteUrl, notifyAdmins } = require("../utils/notify");
+const { escapeHtml, getSiteUrl, notifyCentreAdmins } = require("../utils/notify");
+const mongoose = require("mongoose");
+const Centre = require("../models/Centre");
+
+// Fields returned to the browser for the signed-in user
+const SELF_FIELDS = "-password -aadharNumber -aadharCard.publicId -aadharCard.format";
 const { syncTemporaryRole, signToken } = require("../utils/tempManager");
 const { invalidateRoleCache } = require("../middlewares/auth");
 require("dotenv").config();
@@ -64,24 +68,23 @@ exports.sendOTP = async (req, res) => {
 // Register User
 exports.register = async (req, res) => {
     try {
-        const { firstName, lastName, email, password, role, adminSecret, otp } = req.body;
+        const { firstName, lastName, email, password, role, centreId, otp } = req.body;
         console.log(`[register] New registration attempt for: ${email} (Role: ${role})`);
 
         if (!firstName || !lastName || !email || !password || !role || !otp) {
             return res.status(400).json({ success: false, message: "All fields including OTP are required" });
         }
+        // Admins are appointed by the Super Admin, not self-registered
+        if (!["Participant", "Manager"].includes(role)) {
+            return res.status(400).json({ success: false, message: "You can sign up as a participant or a manager" });
+        }
+        if (!centreId || !mongoose.Types.ObjectId.isValid(centreId) || !(await Centre.exists({ _id: centreId }))) {
+            return res.status(400).json({ success: false, message: "Choose your centre" });
+        }
 
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ success: false, message: "User already exists" });
-        }
-
-        // Admin Secret Validation
-        if (role === "Admin") {
-            const envSecret = process.env.ADMIN_SECRET || "admin123";
-            if (adminSecret !== envSecret) {
-                return res.status(403).json({ success: false, message: "Invalid Admin Secret" });
-            }
         }
 
         // Verify OTP
@@ -98,12 +101,14 @@ exports.register = async (req, res) => {
             email,
             password: hashedPassword,
             role,
+            centreId
         });
 
-        // Notify all admins that a new manager account is waiting for approval
+        // Notify the centre's admins that a new manager account is waiting for approval
         if (user.role === "Manager") {
             const siteUrl = getSiteUrl(req);
-            const adminCount = await notifyAdmins(
+            const adminCount = await notifyCentreAdmins(
+                user.centreId,
                 `Manager Approval Request: ${user.firstName} ${user.lastName}`,
                 (admin) => `<p>Dear ${escapeHtml(admin.firstName)},</p>
                  <p><b>${escapeHtml(user.firstName)} ${escapeHtml(user.lastName)}</b> (${escapeHtml(user.email)}) has signed up as a Manager and is waiting for your approval.</p>
@@ -143,12 +148,12 @@ exports.login = async (req, res) => {
             await syncTemporaryRole(user);
             const token = signToken(user);
 
-            user.password = undefined;
+            const publicUser = await User.findById(user._id).select(SELF_FIELDS).populate("centreId", "name");
             return res.status(200).json({
                 success: true,
                 message: "Logged in successfully",
                 token,
-                user
+                user: publicUser
             });
         } else {
             return res.status(401).json({ success: false, message: "Incorrect password" });
@@ -168,8 +173,8 @@ exports.approveManager = async (req, res) => {
         }
 
         const manager = await User.findById(managerId);
-        if (!manager || manager.role !== "Manager") {
-            return res.status(404).json({ success: false, message: "Manager not found" });
+        if (!manager || manager.role !== "Manager" || String(manager.centreId) !== req.user.centreId) {
+            return res.status(404).json({ success: false, message: "Manager not found in your centre" });
         }
 
         manager.status = action === "Approve" ? "Approved" : "Rejected";
@@ -187,10 +192,10 @@ exports.approveManager = async (req, res) => {
     }
 };
 
-// Get Pending Managers (Admin only)
+// Get Pending Managers of the admin's centre
 exports.getPendingManagers = async (req, res) => {
     try {
-        const managers = await User.find({ role: "Manager", status: "Pending" }).select("-password");
+        const managers = await User.find({ role: "Manager", status: "Pending", centreId: req.user.centreId }).select(SELF_FIELDS).populate("centreId", "name");
         return res.status(200).json({ success: true, managers });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
@@ -200,7 +205,7 @@ exports.getPendingManagers = async (req, res) => {
 // Get Current User (used by the frontend to validate a stored session)
 exports.getMe = async (req, res) => {
     try {
-        const user = await User.findById(req.user.id).select("-password");
+        const user = await User.findById(req.user.id).select(SELF_FIELDS).populate("centreId", "name");
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found" });
         }
