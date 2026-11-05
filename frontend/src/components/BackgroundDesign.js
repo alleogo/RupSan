@@ -1,11 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 
-// Each picture has a cream version for light mode; CSS picks one, so only that one downloads
-const bgImage = (name) => ({
-  '--bg-dark': `url(${process.env.PUBLIC_URL}/${name}.webp)`,
-  '--bg-light': `url(${process.env.PUBLIC_URL}/${name}-light.webp)`
-});
+const bgImage = (name) => ({ '--bg-dark': `url(${process.env.PUBLIC_URL}/${name}.webp)` });
 
 const BackgroundDesign = () => {
   const location = useLocation();

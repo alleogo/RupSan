@@ -5,15 +5,6 @@
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#050505" />
-    <script>
-      (function () {
-        var t;
-        try { t = localStorage.getItem('theme'); } catch (e) {}
-        if (t !== 'light' && t !== 'dark') t = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', t);
-        if (t === 'light') document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f7f1e4');
-      })();
-    </script>
     <meta
       name="description"
       content="Web site created using create-react-app"
