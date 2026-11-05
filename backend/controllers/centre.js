@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Centre = require("../models/Centre");
 const User = require("../models/User");
 const RoleRequest = require("../models/RoleRequest");
+const AccountAccess = require("../models/AccountAccess");
 const mailSender = require("../utils/mailSender");
 const { escapeHtml } = require("../utils/notify");
 const { clearTemporaryAccess } = require("../utils/tempManager");
@@ -27,6 +28,8 @@ const makeAdmin = async (user, centreId) => {
     }
     await RoleRequest.updateMany({ user: user._id, status: "Pending" }, { $set: { status: "Cancelled", reviewNote: "Became a centre admin" } });
     await User.updateOne({ _id: user._id }, { $set: { role: "Admin", status: "Approved", centreId } });
+    // Admins have full access to their centre's account; shared access records no longer apply
+    await AccountAccess.deleteMany({ user: user._id });
     invalidateRoleCache(user._id);
 };
 

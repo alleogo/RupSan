@@ -2,6 +2,9 @@ const mongoose = require("mongoose");
 const Transaction = require("../models/Transaction");
 const uploadImageToCloudinary = require("../utils/cloudinaryUploader");
 const { escapeRegex } = require("../utils/notify");
+const Centre = require("../models/Centre");
+require("../models/Yatra"); // entries link to yatras (populate needs the model registered)
+const { canChangeEntry } = require("../utils/accountAccess");
 
 // Transaction Controller - Ledger entries, filtering, statistics, monthly tracking and export
 
@@ -18,17 +21,19 @@ const isMonth = (m) => typeof m === "string" && /^\d{4}-\d{2}$/.test(m);
 const dayStart = (d) => new Date(`${d}T00:00:00.000Z`);
 const dayEnd = (d) => new Date(`${d}T23:59:59.999Z`);
 
-// Entries are private to the user who recorded them; admins may also manage any entry
-const canModify = (user, transaction) =>
-    user.role === "Admin" || transaction.recordedBy.toString() === user.id.toString();
+// Fields compared for the audit trail when an entry is edited
+const AUDITED_FIELDS = ["type", "amount", "date", "category", "description", "party", "paymentType", "paymentMethod", "paymentId", "paymentProof", "yatra", "notes"];
+const auditValue = (value) => (value instanceof Date ? value.toISOString().slice(0, 10) : value && value._id ? String(value._id) : value === undefined ? null : value);
+const LIST_FIELDS = "-history";
 
 /**
  * Build the MongoDB filter shared by the list, statistics, monthly, breakdown and export endpoints.
  * `includeDates: false` leaves out the period filters (used by the monthly view, which picks its own year).
  */
-const buildFilter = (query, userId, { includeDates = true } = {}) => {
+const buildFilter = (query, centreId, { includeDates = true } = {}) => {
     const { startDate, endDate, month, type, category, paymentType, paymentMethod, yatra, minAmount, maxAmount, hasProof, search } = query;
-    const filter = { recordedBy: new mongoose.Types.ObjectId(userId) };
+    // One account per centre; deleted entries are left out
+    const filter = { centre: new mongoose.Types.ObjectId(centreId), deletedAt: null };
     const and = [];
 
     if (includeDates) {
@@ -146,9 +151,12 @@ exports.addTransaction = async (req, res) => {
             paymentType: fields.paymentType || "Cash",
             date: fields.date || Date.now(),
             paymentProof: paymentProof || null,
-            recordedBy: req.user.id
+            recordedBy: req.user.id,
+            centre: req.account.centreId,
+            history: [{ action: "created", by: req.user.id, at: new Date() }]
         });
         await transaction.populate([{ path: "recordedBy", select: "firstName lastName" }, { path: "yatra", select: "title" }]);
+        transaction.history = undefined;
 
         return res.status(201).json({
             success: true,
@@ -164,7 +172,7 @@ exports.addTransaction = async (req, res) => {
 exports.getTransactions = async (req, res) => {
     try {
         const { sortBy = "date", order = "desc", page = 1, limit = 20 } = req.query;
-        const filter = buildFilter(req.query, req.user.id);
+        const filter = buildFilter(req.query, req.account.centreId);
 
         const sortField = SORT_FIELDS[sortBy] || "date";
         const direction = order === "asc" ? 1 : -1;
@@ -175,6 +183,7 @@ exports.getTransactions = async (req, res) => {
 
         const [transactions, total, stats] = await Promise.all([
             Transaction.find(filter)
+                .select(LIST_FIELDS)
                 .populate("recordedBy", "firstName lastName")
                 .populate("yatra", "title")
                 .sort(sort)
@@ -202,7 +211,7 @@ exports.getTransactions = async (req, res) => {
 
 exports.getLedgerSummary = async (req, res) => {
     try {
-        const stats = await computeStats(buildFilter(req.query, req.user.id));
+        const stats = await computeStats(buildFilter(req.query, req.account.centreId));
 
         return res.status(200).json({
             success: true,
@@ -222,7 +231,7 @@ exports.getLedgerSummary = async (req, res) => {
 exports.getMonthlySummary = async (req, res) => {
     try {
         const year = parseInt(req.query.year) || new Date().getUTCFullYear();
-        const baseFilter = buildFilter(req.query, req.user.id, { includeDates: false });
+        const baseFilter = buildFilter(req.query, req.account.centreId, { includeDates: false });
         const yearStart = new Date(Date.UTC(year, 0, 1));
         const yearEnd = new Date(Date.UTC(year + 1, 0, 1));
 
@@ -233,7 +242,7 @@ exports.getMonthlySummary = async (req, res) => {
             ]),
             computeStats({ ...baseFilter, date: { $lt: yearStart } }),
             Transaction.aggregate([
-                { $match: { recordedBy: baseFilter.recordedBy } },
+                { $match: { centre: baseFilter.centre, deletedAt: null } },
                 { $group: { _id: { $year: "$date" } } },
                 { $sort: { _id: -1 } }
             ])
@@ -276,7 +285,7 @@ exports.getMonthlySummary = async (req, res) => {
 // Totals by category and by payment type for everything matching the filters
 exports.getBreakdown = async (req, res) => {
     try {
-        const filter = buildFilter(req.query, req.user.id);
+        const filter = buildFilter(req.query, req.account.centreId);
 
         const [byCategory, byPaymentType] = await Promise.all([
             Transaction.aggregate([
@@ -314,12 +323,13 @@ exports.getBreakdown = async (req, res) => {
 exports.exportTransactions = async (req, res) => {
     try {
         const { sortBy = "date", order = "desc" } = req.query;
-        const filter = buildFilter(req.query, req.user.id);
+        const filter = buildFilter(req.query, req.account.centreId);
         const sortField = SORT_FIELDS[sortBy] || "date";
         const direction = order === "asc" ? 1 : -1;
 
         const [transactions, total] = await Promise.all([
             Transaction.find(filter)
+                .select(LIST_FIELDS)
                 .populate("recordedBy", "firstName lastName")
                 .populate("yatra", "title")
                 .sort({ [sortField]: direction, _id: direction })
@@ -365,13 +375,9 @@ exports.exportTransactions = async (req, res) => {
 
 exports.updateTransaction = async (req, res) => {
     try {
-        const { id } = req.params;
-
-        const transaction = await Transaction.findById(id);
-        if (!transaction) {
-            return res.status(404).json({ success: false, message: "Transaction not found" });
-        }
-        if (!canModify(req.user, transaction)) {
+        const transaction = req.entry;
+        if (transaction.deletedAt) return res.status(400).json({ success: false, message: "Restore this entry before editing it" });
+        if (!canChangeEntry(req.account, transaction, req.user.id)) {
             return res.status(403).json({ success: false, message: "You can only edit entries you recorded" });
         }
 
@@ -391,9 +397,17 @@ exports.updateTransaction = async (req, res) => {
             fields.paymentProof = null;
         }
 
+        // Record what changed for the audit trail
+        const changes = AUDITED_FIELDS
+            .filter(field => fields[field] !== undefined)
+            .map(field => ({ field, from: auditValue(transaction[field]), to: auditValue(fields[field]) }))
+            .filter(c => JSON.stringify(c.from) !== JSON.stringify(c.to));
+
         Object.assign(transaction, fields);
+        if (changes.length) transaction.history.push({ action: "edited", by: req.user.id, at: new Date(), changes });
         await transaction.save();
         await transaction.populate([{ path: "recordedBy", select: "firstName lastName" }, { path: "yatra", select: "title" }]);
+        transaction.history = undefined;
 
         return res.status(200).json({
             success: true,
@@ -406,30 +420,27 @@ exports.updateTransaction = async (req, res) => {
     }
 };
 
+// Soft delete: the entry is hidden and can be restored by the centre's admins or the Super Admin
 exports.deleteTransaction = async (req, res) => {
     try {
-        const { id } = req.params;
-
-        const transaction = await Transaction.findById(id);
-        if (!transaction) {
-            return res.status(404).json({ success: false, message: "Transaction not found" });
-        }
-        if (!canModify(req.user, transaction)) {
+        const transaction = req.entry;
+        if (transaction.deletedAt) return res.status(400).json({ success: false, message: "This entry is already deleted" });
+        if (!canChangeEntry(req.account, transaction, req.user.id)) {
             return res.status(403).json({ success: false, message: "You can only delete entries you recorded" });
         }
 
-        await transaction.deleteOne();
+        transaction.deletedAt = new Date();
+        transaction.deletedBy = req.user.id;
+        transaction.history.push({ action: "deleted", by: req.user.id, at: new Date() });
+        await transaction.save();
 
-        return res.status(200).json({
-            success: true,
-            message: "Transaction deleted successfully"
-        });
+        return res.status(200).json({ success: true, message: "Transaction deleted. An admin can restore it." });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
     }
 };
 
-// Delete several of the user's own entries at once
+// Delete several entries at once (editors: only their own)
 exports.bulkDeleteTransactions = async (req, res) => {
     try {
         const ids = Array.isArray(req.body.ids) ? req.body.ids.filter(id => mongoose.Types.ObjectId.isValid(id)) : [];
@@ -437,16 +448,60 @@ exports.bulkDeleteTransactions = async (req, res) => {
             return res.status(400).json({ success: false, message: "No entries selected" });
         }
 
-        const filter = { _id: { $in: ids } };
-        if (req.user.role !== "Admin") filter.recordedBy = req.user.id;
+        const filter = { _id: { $in: ids }, centre: req.account.centreId, deletedAt: null };
+        if (!req.account.canEditAll) filter.recordedBy = req.user.id;
 
-        const result = await Transaction.deleteMany(filter);
+        const now = new Date();
+        const result = await Transaction.updateMany(filter, {
+            $set: { deletedAt: now, deletedBy: req.user.id },
+            $push: { history: { action: "deleted", by: req.user.id, at: now } }
+        });
 
         return res.status(200).json({
             success: true,
-            message: `${result.deletedCount} entr${result.deletedCount === 1 ? "y" : "ies"} deleted`,
-            deletedCount: result.deletedCount
+            message: `${result.modifiedCount} entr${result.modifiedCount === 1 ? "y" : "ies"} deleted`,
+            deletedCount: result.modifiedCount
         });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Deleted entries of the account (admins and the Super Admin)
+exports.getDeletedTransactions = async (req, res) => {
+    try {
+        const transactions = await Transaction.find({ centre: req.account.centreId, deletedAt: { $ne: null } })
+            .select(LIST_FIELDS)
+            .populate("recordedBy", "firstName lastName")
+            .populate("deletedBy", "firstName lastName")
+            .populate("yatra", "title")
+            .sort({ deletedAt: -1 })
+            .limit(200);
+        return res.status(200).json({ success: true, transactions });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.restoreTransaction = async (req, res) => {
+    try {
+        const transaction = req.entry;
+        if (!transaction.deletedAt) return res.status(400).json({ success: false, message: "This entry isn't deleted" });
+        transaction.deletedAt = null;
+        transaction.deletedBy = null;
+        transaction.history.push({ action: "restored", by: req.user.id, at: new Date() });
+        await transaction.save();
+        return res.status(200).json({ success: true, message: "Entry restored" });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Audit trail of one entry
+exports.getTransactionHistory = async (req, res) => {
+    try {
+        await req.entry.populate("history.by", "firstName lastName");
+        return res.status(200).json({ success: true, history: req.entry.history });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
     }
@@ -454,7 +509,7 @@ exports.bulkDeleteTransactions = async (req, res) => {
 
 exports.getCategories = async (req, res) => {
     try {
-        const filter = { recordedBy: req.user.id };
+        const filter = { centre: new mongoose.Types.ObjectId(req.account.centreId), deletedAt: null };
         const [categories, paymentMethods] = await Promise.all([
             Transaction.distinct("category", filter),
             Transaction.distinct("paymentMethod", filter)
@@ -465,6 +520,54 @@ exports.getCategories = async (req, res) => {
             categories: categories.filter(Boolean).sort(),
             paymentMethods: paymentMethods.filter(Boolean).sort()
         });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Super Admin: entries from before centre accounts, grouped by who recorded them
+exports.getUnassignedEntries = async (req, res) => {
+    try {
+        const groups = await Transaction.aggregate([
+            { $match: { centre: null, deletedAt: null } },
+            { $group: {
+                _id: "$recordedBy",
+                count: { $sum: 1 },
+                income: { $sum: { $cond: [{ $eq: ["$type", "Income"] }, "$amount", 0] } },
+                expense: { $sum: { $cond: [{ $eq: ["$type", "Expense"] }, "$amount", 0] } },
+                from: { $min: "$date" },
+                to: { $max: "$date" }
+            } },
+            { $lookup: { from: "users", localField: "_id", foreignField: "_id", as: "recorder" } },
+            { $lookup: { from: "centres", localField: "recorder.centreId", foreignField: "_id", as: "recorderCentre" } },
+            { $project: {
+                count: 1, income: 1, expense: 1, from: 1, to: 1,
+                recorder: { $let: { vars: { r: { $arrayElemAt: ["$recorder", 0] } }, in: { _id: "$$r._id", firstName: "$$r.firstName", lastName: "$$r.lastName", email: "$$r.email" } } },
+                recorderCentre: { $let: { vars: { c: { $arrayElemAt: ["$recorderCentre", 0] } }, in: { _id: "$$c._id", name: "$$c.name" } } }
+            } },
+            { $sort: { count: -1 } }
+        ]);
+        return res.status(200).json({ success: true, groups });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Super Admin: move one person's pre-centre entries into a centre's account
+exports.assignUnassignedEntries = async (req, res) => {
+    try {
+        const { recordedBy, centreId } = req.body;
+        if (!mongoose.Types.ObjectId.isValid(recordedBy) || !mongoose.Types.ObjectId.isValid(centreId)) {
+            return res.status(400).json({ success: false, message: "Choose whose entries to move and which centre" });
+        }
+        if (!(await Centre.exists({ _id: centreId }))) return res.status(404).json({ success: false, message: "Centre not found" });
+
+        const now = new Date();
+        const result = await Transaction.updateMany(
+            { centre: null, recordedBy },
+            { $set: { centre: centreId }, $push: { history: { action: "moved", by: req.user.id, at: now, changes: [{ field: "centre", from: null, to: String(centreId) }] } } }
+        );
+        return res.status(200).json({ success: true, message: `${result.modifiedCount} entr${result.modifiedCount === 1 ? "y" : "ies"} moved into the centre's account` });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
     }

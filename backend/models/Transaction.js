@@ -68,7 +68,31 @@ const transactionSchema = new mongoose.Schema({
         type: String,
         trim: true,
         default: ""
-    }
+    },
+    // The centre whose account this entry belongs to (null for entries from before centre accounts)
+    centre: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Centre",
+        default: null
+    },
+    // Soft delete: deleted entries are hidden and can be restored by the centre's admins or the Super Admin
+    deletedAt: {
+        type: Date,
+        default: null
+    },
+    deletedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null
+    },
+    // Audit trail: who created, edited, deleted or restored the entry, and what changed
+    history: [{
+        _id: false,
+        action: { type: String, enum: ["created", "edited", "deleted", "restored", "moved"] },
+        by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        at: { type: Date, default: Date.now },
+        changes: [{ _id: false, field: String, from: mongoose.Schema.Types.Mixed, to: mongoose.Schema.Types.Mixed }]
+    }]
 }, { timestamps: true });
 
 // Indexes for better query performance
@@ -78,5 +102,6 @@ transactionSchema.index({ type: 1 });
 transactionSchema.index({ recordedBy: 1 });
 transactionSchema.index({ date: -1, category: 1, type: 1 });
 transactionSchema.index({ recordedBy: 1, date: -1 });
+transactionSchema.index({ centre: 1, deletedAt: 1, date: -1 });
 
 module.exports = mongoose.model("Transaction", transactionSchema);

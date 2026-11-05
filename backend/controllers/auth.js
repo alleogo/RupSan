@@ -10,6 +10,13 @@ const Centre = require("../models/Centre");
 // Fields returned to the browser for the signed-in user
 const SELF_FIELDS = "-password -aadharNumber -aadharCard.publicId -aadharCard.format";
 const { syncTemporaryRole, signToken } = require("../utils/tempManager");
+const { getAccountPermissions } = require("../utils/accountAccess");
+
+// The user as sent to the browser, with their access level to their centre's account
+const withAccountLevel = async (user) => {
+    const permissions = await getAccountPermissions(user, user.role === "SuperAdmin" ? "any" : user.centreId && (user.centreId._id || user.centreId));
+    return { ...user.toObject(), accountLevel: permissions.level };
+};
 const { invalidateRoleCache } = require("../middlewares/auth");
 require("dotenv").config();
 
@@ -153,7 +160,7 @@ exports.login = async (req, res) => {
                 success: true,
                 message: "Logged in successfully",
                 token,
-                user: publicUser
+                user: await withAccountLevel(publicUser)
             });
         } else {
             return res.status(401).json({ success: false, message: "Incorrect password" });
@@ -215,7 +222,7 @@ exports.getMe = async (req, res) => {
         // (e.g. temporary manager access started, ended or was revoked, or a manager was approved)
         const claims = req.tokenClaims || req.user;
         const stale = claims.role !== user.role || claims.status !== user.status || Boolean(claims.tempManager) !== Boolean(user.tempManagerFrom);
-        return res.status(200).json({ success: true, user, ...(stale ? { token: signToken(user) } : {}) });
+        return res.status(200).json({ success: true, user: await withAccountLevel(user), ...(stale ? { token: signToken(user) } : {}) });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
     }

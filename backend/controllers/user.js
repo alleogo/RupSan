@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const User = require("../models/User");
 const Centre = require("../models/Centre");
 const RoleRequest = require("../models/RoleRequest");
+const AccountAccess = require("../models/AccountAccess");
 const mailSender = require("../utils/mailSender");
 const { isDay, dayStart, dayEnd, syncTemporaryRole, clearTemporaryAccess } = require("../utils/tempManager");
 const { invalidateRoleCache } = require("../middlewares/auth");
@@ -45,6 +46,8 @@ exports.updateProfile = async (req, res) => {
         }
 
         await User.updateOne({ _id: req.user.id }, { $set: updates });
+        // Access to the old centre's account ends when someone changes centre
+        if (updates.centreId) await AccountAccess.deleteMany({ user: req.user.id });
         invalidateRoleCache(req.user.id);
         const user = await loadPublicUser(req.user.id);
         const message = updates.centreId ? "Profile updated. Request verification so your new centre's admin can verify you." : "Profile updated successfully";
