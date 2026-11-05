@@ -58,7 +58,7 @@
   --accent-danger: #b91c1c;
   --accent-warning: #b45309;
 
-  --border-color: #e4ddcc;
+  --border-color: #e8dec6;
   --border-gold: rgba(138, 106, 16, 0.35);
   --glass-shadow: 0 4px 20px rgba(60, 45, 10, 0.08);
   --glass-bg: rgba(247, 241, 228, 0.85);
@@ -450,10 +450,32 @@ p {
   background-size: 100% 100%, 100% 100%, 60px 60px, 60px 60px;
 }
 :root[data-theme="light"] .glass-card {
-  box-shadow: var(--glass-shadow);
+  background: linear-gradient(180deg, #ffffff 0%, #fffdf8 100%);
+  border-color: rgba(176, 138, 48, 0.22);
+  box-shadow: 0 1px 2px rgba(60, 45, 10, 0.05), 0 10px 28px -6px rgba(60, 45, 10, 0.12);
 }
 :root[data-theme="light"] .glass-card:hover {
-  box-shadow: 0 8px 30px rgba(138, 106, 16, 0.1);
+  border-color: rgba(176, 138, 48, 0.45);
+  box-shadow: 0 1px 2px rgba(60, 45, 10, 0.06), 0 14px 34px -6px rgba(60, 45, 10, 0.16);
+}
+/* Deep peacock ink for headings */
+:root[data-theme="light"] h1,
+:root[data-theme="light"] h2,
+:root[data-theme="light"] h3 {
+  color: #10302d;
+}
+/* Gold hairline under the navbar */
+:root[data-theme="light"] .navbar {
+  border-bottom: 1px solid transparent !important;
+  border-image: linear-gradient(90deg, transparent, rgba(176, 138, 48, 0.55) 20%, rgba(176, 138, 48, 0.55) 80%, transparent) 1;
+  box-shadow: 0 6px 20px -12px rgba(60, 45, 10, 0.25);
+}
+:root[data-theme="light"] .input-field {
+  border-color: #e2d6b8;
+}
+:root[data-theme="light"] .input-field:focus {
+  border-color: #b08a30;
+  box-shadow: 0 0 0 3px rgba(176, 138, 48, 0.18);
 }
 :root[data-theme="light"] .auth-bg-image {
   background-position: right center;
@@ -471,8 +493,11 @@ p {
 :root[data-theme="light"] .yatra-bg-overlay {
   background: rgba(247, 241, 228, 0.3);
 }
+:root[data-theme="light"] .dash-bg-image {
+  background-position: center 30%;
+}
 :root[data-theme="light"] .dash-bg-overlay {
-  background: linear-gradient(45deg, rgba(247, 241, 228, 0.3) 0%, rgba(247, 241, 228, 0.5) 60%, rgba(247, 241, 228, 0.65) 100%);
+  background: linear-gradient(45deg, rgba(247, 241, 228, 0.12) 0%, rgba(247, 241, 228, 0.3) 60%, rgba(247, 241, 228, 0.45) 100%);
 }
 
 /* Theme switch in the navbar */
