@@ -472,6 +472,9 @@ p {
   color: #0d3640;
   text-shadow: 0 0 10px rgba(246, 238, 222, 0.9), 0 0 2px rgba(246, 238, 222, 0.9);
 }
+:root[data-theme="light"] .navbar-title {
+  text-shadow: none;
+}
 /* Antique-gold hairline under the navbar */
 :root[data-theme="light"] .navbar {
   border-bottom: 1px solid transparent !important;
@@ -485,7 +488,7 @@ p {
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 3px rgba(14, 106, 115, 0.15);
 }
-/* Feathers sit on a different edge on each page */
+/* Feathers sit in a different place on each page (see BackgroundDesign.js) */
 :root[data-theme="light"] .auth-bg-image,
 :root[data-theme="light"] .profile-bg-image,
 :root[data-theme="light"] .yatra-bg-image,
@@ -502,10 +505,12 @@ p {
     background-image: var(--bg-light-tall);
   }
 }
-:root[data-theme="light"] .auth-bg-image { background-position: right center; }
-:root[data-theme="light"] .profile-bg-image { background-position: left center; }
-:root[data-theme="light"] .yatra-bg-image { background-position: right bottom; }
-:root[data-theme="light"] .dash-bg-image { background-position: left bottom; }
+:root[data-theme="light"] .auth-bg-image,
+:root[data-theme="light"] .profile-bg-image,
+:root[data-theme="light"] .yatra-bg-image,
+:root[data-theme="light"] .dash-bg-image {
+  background-position: var(--bg-light-pos, center);
+}
 :root[data-theme="light"] .auth-bg-overlay {
   background: linear-gradient(90deg, rgba(239, 228, 207, 0.35) 0%, transparent 60%);
 }
