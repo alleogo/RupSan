@@ -394,6 +394,16 @@ const YatraDetails = () => {
                   </span>
                 )}
               </div>
+            ) : user?.role === 'Participant' && user?.verificationStatus !== 'Verified' ? (
+              // The server also refuses enrolment from unverified participants
+              <div>
+                <Button variant="default" disabled title="Your profile must be verified before you can enroll" style={{ width: 'auto', padding: '10px 28px' }}>🔒 Enroll in Yatra</Button>
+                <p style={{ marginTop: '8px', fontSize: '0.85rem', color: 'var(--accent-warning)' }}>
+                  {user?.verificationStatus === 'Pending'
+                    ? 'Your verification is pending. You can enroll once an admin verifies your profile.'
+                    : <>Only verified members can enroll. <span onClick={() => navigate('/profile')} style={{ textDecoration: 'underline', cursor: 'pointer' }}>Complete your profile and request verification</span>.</>}
+                </p>
+              </div>
             ) : (
               <Button variant="primary" onClick={() => setEnrollModalOpen(true)} style={{ width: 'auto', padding: '10px 28px' }}>Enroll in Yatra</Button>
             )
