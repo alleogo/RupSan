@@ -347,6 +347,21 @@ const YatraDetails = () => {
   const statusBg = yatra.status === 'Ongoing' ? 'rgba(16,185,129,0.15)' : yatra.status === 'Completed' ? 'rgba(var(--tint-rgb),0.08)' : 'rgba(212,175,55,0.15)';
   const metaChipStyle = { display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '20px', background: 'rgba(var(--tint-rgb),0.04)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '0.85rem' };
 
+  const openEditYatra = () => {
+    setEditYatraData({
+      title: yatra.title,
+      description: yatra.description,
+      destination: yatra.destination,
+      startDate: yatra.startDate?.slice(0, 10),
+      endDate: yatra.endDate?.slice(0, 10),
+      registrationFee: yatra.registrationFee,
+      upiId: yatra.upiId || '',
+      visibility: visibilityValue(yatra)
+    });
+    setEditYatraModalOpen(true);
+  };
+  const ownerBtnStyle = { width: 'auto', padding: '6px 14px', fontSize: '0.85rem' };
+
   return (
     <>
       <div className="animate-fade-in" style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
@@ -359,10 +374,19 @@ const YatraDetails = () => {
         </div>
 
         <div>
-          {yatra.status && (
-            <span style={{ display: 'inline-block', background: statusBg, color: statusColor, padding: '4px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '600', marginBottom: '12px' }}>
-              {yatra.status}
-            </span>
+          {(yatra.status || isYatraOwner) && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
+              {yatra.status && (
+                <span style={{ display: 'inline-block', background: statusBg, color: statusColor, padding: '4px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '600' }}>
+                  {yatra.status}
+                </span>
+              )}
+              {isYatraOwner && (
+                <span style={{ display: 'inline-block', background: 'rgba(212,175,55,0.08)', color: 'var(--accent-secondary)', border: '1px solid var(--border-gold)', padding: '3px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '500' }}>
+                  ★ You manage this Yatra
+                </span>
+              )}
+            </div>
           )}
           <h1 className="yatra-title" style={{ fontSize: '2.4rem', lineHeight: 1.15, marginBottom: '16px' }}>{yatra.title}</h1>
 
@@ -374,6 +398,14 @@ const YatraDetails = () => {
           </div>
 
           {yatra.description && <p style={{ marginBottom: '20px' }}>{yatra.description}</p>}
+
+          {/* Edit / Delete - only for the yatra's own manager or admin */}
+          {isYatraOwner && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+              <Button variant="default" style={ownerBtnStyle} onClick={openEditYatra}>✏️ Edit Details</Button>
+              <Button variant="danger" style={ownerBtnStyle} onClick={handleDeleteYatra}>🗑️ Delete</Button>
+            </div>
+          )}
 
           {(user?.role === 'Participant' || user?.role === 'Manager' || user?.role === 'Admin') && yatra.status !== 'Completed' && (
             myRegStatus ? (
@@ -432,38 +464,6 @@ const YatraDetails = () => {
         </div>
       )}
 
-      {/* Edit / Delete Yatra buttons - only for the yatra's own manager or admin */}
-      {isYatraOwner && (
-        <div className="owner-bar" style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '28px', padding: '14px 16px', background: 'rgba(212,175,55,0.05)', borderRadius: '12px', border: '1px solid var(--border-gold)', alignItems: 'center' }}>
-          <span style={{ color: 'var(--accent-secondary)', fontSize: '0.9rem', fontWeight: '500', flex: 1 }}>You manage this Yatra</span>
-          <Button
-            variant="default"
-            style={{ width: 'auto', padding: '8px 20px' }}
-            onClick={() => {
-              setEditYatraData({
-                title: yatra.title,
-                description: yatra.description,
-                destination: yatra.destination,
-                startDate: yatra.startDate?.slice(0, 10),
-                endDate: yatra.endDate?.slice(0, 10),
-                registrationFee: yatra.registrationFee,
-                upiId: yatra.upiId || '',
-                visibility: visibilityValue(yatra)
-              });
-              setEditYatraModalOpen(true);
-            }}
-          >
-            ✏️ Edit Yatra Details
-          </Button>
-          <Button
-            variant="danger"
-            style={{ width: 'auto', padding: '8px 20px' }}
-            onClick={handleDeleteYatra}
-          >
-            🗑️ Delete Yatra
-          </Button>
-        </div>
-      )}
       
 
 

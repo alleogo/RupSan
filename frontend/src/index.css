@@ -516,15 +516,6 @@ p {
   .yatra-title {
     font-size: 1.8rem !important;
   }
-  .owner-bar > span {
-    flex-basis: 100% !important;
-  }
-  .owner-bar > button {
-    flex: 1;
-    padding: 8px 10px !important;
-    font-size: 0.85rem;
-    white-space: nowrap;
-  }
   .tab-row {
     gap: 8px !important;
   }
