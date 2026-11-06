@@ -43,6 +43,40 @@
   color-scheme: dark;
 }
 
+/* Light theme: aged parchment with peacock teal, deep blue and antique gold */
+:root[data-theme="light"] {
+  --bg-primary: #efe4cf;
+  --bg-secondary: #fffaf0;
+  --text-primary: #1f2a2e;
+  --text-secondary: #5b5446;
+
+  --accent-primary: #0e6a73;   /* peacock teal */
+  --accent-secondary: #8a5f14; /* antique gold */
+  --accent-hover: #0a4f57;
+
+  --accent-success: #2e7d32;
+  --accent-danger: #b42318;
+  --accent-warning: #a15c07;
+
+  --border-color: #dccdaf;
+  --border-gold: rgba(138, 95, 20, 0.35);
+  --glass-shadow: 0 4px 20px rgba(70, 50, 15, 0.12);
+  --glass-bg: rgba(242, 232, 212, 0.86);
+  --glass-border: rgba(138, 95, 20, 0.25);
+
+  --tint-rgb: 40, 30, 10;
+  --inset-bg: rgba(90, 65, 20, 0.06);
+  --input-bg: #fffcf5;
+  --input-bg-focus: #ffffff;
+  --surface-raised: #fffaf0;
+  --chart-grid: #e6dac2;
+  --chart-axis: #c9b994;
+  --accent-indigo: #1e3a8a;
+  --title-gradient: linear-gradient(to bottom, #17a2a8 0%, #0e6a73 45%, #0b3f6b 100%);
+  --title-shadow: drop-shadow(0 1px 1px rgba(40, 30, 10, 0.3));
+  color-scheme: light;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -289,9 +323,15 @@ p {
   transform: rotate(45deg) translateZ(40px);
 }
 
-/* Background pictures */
+/* Background pictures: dark by default, cream versions in light mode */
 .auth-bg-image, .profile-bg-image, .yatra-bg-image, .dash-bg-image {
   background-image: var(--bg-dark);
+}
+:root[data-theme="light"] .auth-bg-image,
+:root[data-theme="light"] .profile-bg-image,
+:root[data-theme="light"] .yatra-bg-image,
+:root[data-theme="light"] .dash-bg-image {
+  background-image: var(--bg-light);
 }
 
 /* --- Auth Background (Peacock Feather Image) --- */
@@ -389,6 +429,108 @@ p {
     rgba(0, 0, 0, 0.8) 60%,
     rgba(0, 0, 0, 0.95) 100%
   );
+}
+
+/* Light theme: buttons, cards and the parchment pictures */
+:root[data-theme="light"] body {
+  background-color: var(--bg-primary);
+  background-image: none;
+}
+:root[data-theme="light"] .btn-primary {
+  background: linear-gradient(135deg, #12808a, #0b4f6c);
+  color: #fdf6e3;
+  box-shadow: 0 4px 12px rgba(11, 79, 108, 0.25);
+}
+:root[data-theme="light"] .btn-primary:hover {
+  background: linear-gradient(135deg, #169aa3, #0d5f80);
+  box-shadow: 0 6px 16px rgba(11, 79, 108, 0.3);
+}
+/* Outline buttons get a paper fill so they stay readable over the feathers */
+:root[data-theme="light"] .btn-default,
+:root[data-theme="light"] .btn-danger {
+  background: rgba(255, 251, 242, 0.7);
+}
+:root[data-theme="light"] .btn-default:hover {
+  background: rgba(14, 106, 115, 0.07);
+}
+/* Cards: translucent paper, so the parchment shows through faintly */
+:root[data-theme="light"] .glass-card {
+  background: rgba(255, 251, 242, 0.84);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-color: rgba(138, 95, 20, 0.22);
+  box-shadow: 0 1px 2px rgba(70, 50, 15, 0.06), 0 10px 28px -8px rgba(70, 50, 15, 0.18);
+}
+:root[data-theme="light"] .glass-card:hover {
+  border-color: rgba(14, 106, 115, 0.4);
+  box-shadow: 0 1px 2px rgba(70, 50, 15, 0.07), 0 14px 34px -8px rgba(70, 50, 15, 0.22);
+}
+/* Deep peacock ink for headings */
+:root[data-theme="light"] h1,
+:root[data-theme="light"] h2,
+:root[data-theme="light"] h3 {
+  color: #0d3640;
+}
+/* Antique-gold hairline under the navbar */
+:root[data-theme="light"] .navbar {
+  border-bottom: 1px solid transparent !important;
+  border-image: linear-gradient(90deg, transparent, rgba(138, 95, 20, 0.55) 20%, rgba(138, 95, 20, 0.55) 80%, transparent) 1;
+  box-shadow: 0 6px 20px -12px rgba(70, 50, 15, 0.3);
+}
+:root[data-theme="light"] .input-field {
+  border-color: #d8c8a6;
+}
+:root[data-theme="light"] .input-field:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(14, 106, 115, 0.15);
+}
+/* Feathers sit on a different edge on each page */
+:root[data-theme="light"] .auth-bg-image,
+:root[data-theme="light"] .profile-bg-image,
+:root[data-theme="light"] .yatra-bg-image,
+:root[data-theme="light"] .dash-bg-image {
+  background-size: cover;
+  opacity: 1;
+  filter: none;
+}
+@media (max-aspect-ratio: 4/5) {
+  :root[data-theme="light"] .auth-bg-image,
+  :root[data-theme="light"] .profile-bg-image,
+  :root[data-theme="light"] .yatra-bg-image,
+  :root[data-theme="light"] .dash-bg-image {
+    background-image: var(--bg-light-tall);
+  }
+}
+:root[data-theme="light"] .auth-bg-image { background-position: right center; }
+:root[data-theme="light"] .profile-bg-image { background-position: left center; }
+:root[data-theme="light"] .yatra-bg-image { background-position: right bottom; }
+:root[data-theme="light"] .dash-bg-image { background-position: left bottom; }
+:root[data-theme="light"] .auth-bg-overlay {
+  background: linear-gradient(90deg, rgba(239, 228, 207, 0.35) 0%, transparent 60%);
+}
+:root[data-theme="light"] .profile-bg-overlay,
+:root[data-theme="light"] .yatra-bg-overlay,
+:root[data-theme="light"] .dash-bg-overlay {
+  background: rgba(239, 228, 207, 0.12);
+}
+
+/* Theme switch in the navbar */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 1rem;
+  padding: 0;
+  transition: color var(--transition-fast);
+}
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
+  color: var(--accent-primary);
 }
 
 /* Visually hidden, still read by screen readers */

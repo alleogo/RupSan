@@ -1,7 +1,13 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 
-const bgImage = (name) => ({ '--bg-dark': `url(${process.env.PUBLIC_URL}/${name}.webp)` });
+// Each page has a parchment version for light mode, with the feathers placed differently;
+// portrait screens get a tall version. CSS picks one picture, so only that one downloads
+const bgImage = (name, lightName = name) => ({
+  '--bg-dark': `url(${process.env.PUBLIC_URL}/${name}.webp)`,
+  '--bg-light': `url(${process.env.PUBLIC_URL}/${lightName}-light.webp)`,
+  '--bg-light-tall': `url(${process.env.PUBLIC_URL}/${lightName}-light-tall.webp)`
+});
 
 const BackgroundDesign = () => {
   const location = useLocation();
@@ -36,7 +42,7 @@ const BackgroundDesign = () => {
       <div className="luxury-bg yatra-bg">
         <div
           className="yatra-bg-image"
-          style={bgImage('profile-bg')}
+          style={bgImage('profile-bg', 'yatra-bg')}
         ></div>
         <div className="yatra-bg-overlay"></div>
       </div>
