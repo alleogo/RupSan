@@ -48,7 +48,7 @@
   --bg-primary: #efe4cf;
   --bg-secondary: #fffaf0;
   --text-primary: #1f2a2e;
-  --text-secondary: #5b5446;
+  --text-secondary: #4a4336;
 
   --accent-primary: #0e6a73;   /* peacock teal */
   --accent-secondary: #8a5f14; /* antique gold */
@@ -470,10 +470,14 @@ p {
 :root[data-theme="light"] h2,
 :root[data-theme="light"] h3 {
   color: #0d3640;
-  text-shadow: 0 0 10px rgba(246, 238, 222, 0.9), 0 0 2px rgba(246, 238, 222, 0.9);
+  text-shadow: 0 0 16px #f6eede, 0 0 8px #f6eede, 0 0 4px #f6eede, 0 0 2px #f6eede;
 }
 :root[data-theme="light"] .navbar-title {
   text-shadow: none;
+}
+/* Body text gets the same cream halo, so it stays readable where it crosses a feather */
+:root[data-theme="light"] :is(p, label, li, small, td, th) {
+  text-shadow: 0 0 14px #f6eede, 0 0 8px #f6eede, 0 0 4px #f6eede, 0 0 2px #f6eede, 0 0 1px #f6eede;
 }
 /* Antique-gold hairline under the navbar */
 :root[data-theme="light"] .navbar {

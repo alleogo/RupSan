@@ -112,7 +112,9 @@ const ManagerAccessRequests = () => {
       {notice && <p role="status" style={{ color: 'var(--accent-success)', fontSize: '0.9rem', marginTop: '8px' }}>✓ {notice}</p>}
 
       {pending.length === 0 && approved.length === 0 && (
-        <p style={{ marginTop: '12px', fontSize: '0.9rem' }}>No requests waiting. Participants can ask for manager access from their profile.</p>
+        <Card style={{ marginTop: '12px', padding: '16px 20px' }}>
+          <p style={{ fontSize: '0.9rem' }}>No requests waiting. Participants can ask for manager access from their profile.</p>
+        </Card>
       )}
 
       {pending.length > 0 && (
