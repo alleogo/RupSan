@@ -976,7 +976,7 @@ const YatraDetails = () => {
                 <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9rem' }}>UPI ID (optional)</label>
                 <input type="text" className="input-field" value={editYatraData.upiId || ''} onChange={e => setEditYatraData({...editYatraData, upiId: e.target.value})} />
               </div>
-              <VisibilityPicker value={editYatraData.visibility} onChange={(visibility) => setEditYatraData({ ...editYatraData, visibility })} ownCentreId={(yatra.centre?._id || yatra.centre) || userCentreId(user)} />
+              <VisibilityPicker value={editYatraData.visibility} onChange={(visibility) => setEditYatraData({ ...editYatraData, visibility })} ownCentreId={(yatra.centre?._id || yatra.centre) || yatra.createdBy?.centreId || userCentreId(user)} />
               {cropperImageSrc ? (
                 <div style={{ marginBottom: '12px', background: 'var(--inset-bg)', padding: '12px', borderRadius: '8px' }}>
                   <p style={{ fontSize: '0.85rem', marginBottom: '8px', color: 'var(--text-secondary)' }}>Crop your thumbnail image:</p>

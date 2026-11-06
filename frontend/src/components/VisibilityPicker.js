@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { centreApi } from '../utils/api';
 
 // "Who can see this yatra?" — only the owning centre, all centres, or chosen centres.
+// Without an owning centre (no one involved belongs to one) the choice is all centres or only chosen ones.
 // value: { allCentres: boolean, centres: [centreId] }
 const VisibilityPicker = ({ value, onChange, ownCentreId }) => {
   const [centres, setCentres] = useState([]);
@@ -33,9 +34,9 @@ const VisibilityPicker = ({ value, onChange, ownCentreId }) => {
   return (
     <fieldset style={{ border: 'none', padding: 0, margin: '0 0 12px' }}>
       <legend style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Who can see this yatra?</legend>
-      {option('own', `Only ${ownName || 'my centre'}`)}
+      {ownCentreId && option('own', `Only ${ownName || 'my centre'}`)}
       {option('all', 'All centres')}
-      {option('selected', `${ownName || 'My centre'} and chosen centres`)}
+      {option('selected', ownCentreId ? `${ownName || 'My centre'} and chosen centres` : 'Only chosen centres')}
       {mode === 'selected' && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px', margin: '4px 0 0 26px' }}>
           {others.length === 0 ? <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>There are no other centres yet.</span> : others.map(c => (

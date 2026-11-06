@@ -10,7 +10,7 @@ const { canSeeYatra, canManageYatra, visibleYatraFilter, loadManageableYatra } =
 
 const EDITABLE_FIELDS = ["title", "description", "startDate", "endDate", "destination", "registrationFee", "upiId"];
 const populateYatra = (query) => query
-    .populate("createdBy", "firstName lastName email")
+    .populate("createdBy", "firstName lastName email centreId")
     .populate("centre", "name")
     .populate("visibility.centres", "name");
 
@@ -163,14 +163,23 @@ exports.updateYatra = async (req, res) => {
 
         // Yatras from before centres join their creator's centre and stay visible to every centre,
         // as they were, unless the editor chooses otherwise
+        // (the creator's centre, else the editor's)
         if (!yatra.centre) {
             const creator = await User.findById(yatra.createdBy).select("centreId");
-            if (creator && creator.centreId) {
-                yatra.centre = creator.centreId;
+            const ownerCentre = (creator && creator.centreId) || req.user.centreId;
+            if (ownerCentre) {
+                yatra.centre = ownerCentre;
                 yatra.visibility = { allCentres: true, centres: [] };
             }
         }
         const visibility = await parseVisibility(req.body.visibility, yatra.centre);
+        if (visibility && !yatra.centre && !visibility.allCentres) {
+            // Neither the creator nor the editor belongs to a centre: the first chosen centre becomes the yatra's centre
+            if (!visibility.centres.length) {
+                return res.status(400).json({ success: false, message: "Choose at least one centre, or All centres." });
+            }
+            yatra.centre = visibility.centres.shift();
+        }
         if (visibility && yatra.centre) yatra.visibility = visibility;
 
         if (req.files) {
