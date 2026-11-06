@@ -470,6 +470,7 @@ p {
 :root[data-theme="light"] h2,
 :root[data-theme="light"] h3 {
   color: #0d3640;
+  text-shadow: 0 0 10px rgba(246, 238, 222, 0.9), 0 0 2px rgba(246, 238, 222, 0.9);
 }
 /* Antique-gold hairline under the navbar */
 :root[data-theme="light"] .navbar {
