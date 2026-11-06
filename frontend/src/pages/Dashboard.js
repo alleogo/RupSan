@@ -153,8 +153,9 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Two big section cards side by side */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(420px, 100%), 1fr))', gap: '32px', marginBottom: '40px' }}>
+            {/* Two big section cards side by side; when only the Yatra card shows, it keeps the
+                same size (half the page) and sits in the centre */}
+            <div style={{ display: 'grid', gridTemplateColumns: user?.accountLevel ? 'repeat(auto-fit, minmax(min(420px, 100%), 1fr))' : 'minmax(0, 560px)', justifyContent: 'center', gap: '32px', marginBottom: '40px' }}>
 
               {/* === ACCOUNTS MANAGEMENT CARD (only with access to the centre's account) === */}
               {user?.accountLevel && (
