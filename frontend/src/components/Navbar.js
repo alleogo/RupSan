@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FiLayout, FiUser, FiLogOut, FiMenu, FiX, FiArrowLeft, FiMapPin, FiCompass, FiSun, FiMoon } from 'react-icons/fi';
 import { AuthContext } from '../context/AuthContext';
 import { settingsApi, getImageUrl } from '../utils/api';
-import { getTheme, setTheme, watchSystemTheme } from '../utils/theme';
+import { getTheme, setTheme } from '../utils/theme';
 
 // Built-in branding shown before settings load; keep in sync with the saved settings to avoid a flash
 const DEFAULT_BRANDING = {
@@ -42,7 +42,6 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [theme, setThemeState] = useState(getTheme);
-  useEffect(() => watchSystemTheme(setThemeState), []);
   const toggleTheme = () => {
     const next = theme === 'light' ? 'dark' : 'light';
     setTheme(next);

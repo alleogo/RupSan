@@ -4,14 +4,14 @@
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#050505" />
+    <meta name="theme-color" content="#efe4cf" />
     <script>
       (function () {
         var t;
         try { t = localStorage.getItem('theme'); } catch (e) {}
-        if (t !== 'light' && t !== 'dark') t = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        if (t !== 'light' && t !== 'dark') t = 'light'; // light is the default theme
         document.documentElement.setAttribute('data-theme', t);
-        if (t === 'light') document.querySelector('meta[name="theme-color"]').setAttribute('content', '#efe4cf');
+        if (t === 'dark') document.querySelector('meta[name="theme-color"]').setAttribute('content', '#050505');
       })();
     </script>
     <meta
